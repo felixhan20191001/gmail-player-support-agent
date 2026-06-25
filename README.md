@@ -1,11 +1,10 @@
-# Multi-Project Player Support Agent
+# 多项目玩家客服 Agent
 
-Standalone Gmail player-support agent built on the `forge-guardrails` package.
-It uses a local or OpenAI-compatible model to classify Gmail threads across
-multiple projects, query project-specific ClickHouse logs, and create Gmail
-drafts or human handoffs.
+基于 `forge-guardrails` 包构建的独立 Gmail 玩家客服 Agent。
+它使用本地或 OpenAI 兼容模型对多个项目的 Gmail 邮件线程进行分类，
+查询项目专属的 ClickHouse 日志，并创建 Gmail 回复草稿或转人工处理。
 
-## Install
+## 安装
 
 ```bash
 cd /Users/hanpengfei/Documents/repo/gmailAgent
@@ -14,28 +13,24 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Forge is installed from PyPI as a normal dependency (`import forge`). You do not
-need a local Forge source checkout for this project.
+Forge 作为普通依赖从 PyPI 安装（`import forge`），不需要本地 Forge 源码。
 
-## Current Scope
+## 当前能力范围
 
-- Gmail parent labels are treated as project names, such as `NumberCrush`,
-  `BlackHole`, or `BusFever`.
-- Applies only existing Gmail labels. It never creates labels.
-- Creates Gmail drafts only; it never sends mail.
-- Dry-run blocks Gmail mutations, state writes, and notifications. Read-only
-  ClickHouse queries are allowed by default for model evidence gathering unless
-  `--block-db-in-dry-run` is passed.
+- Gmail 父标签作为项目名，例如 `NumberCrush`、`BlackHole`、`BusFever`。
+- 仅应用已存在的 Gmail 标签，绝不创建新标签。
+- 仅创建 Gmail 草稿，绝不发送邮件。
+- Dry-run 模式下阻止 Gmail 写入、状态写入和通知。默认允许只读 ClickHouse 查询用于模型取证，除非传入 `--block-db-in-dry-run`。
 
-## Config
+## 配置
 
-Local config is intentionally ignored by Git:
+本地配置文件被 Git 忽略：
 
 ```text
 config/config.local.toml
 ```
 
-For durable Gmail auth, prefer refresh-token env vars:
+持久化 Gmail 认证推荐使用 refresh-token 环境变量：
 
 ```bash
 export GOOGLE_CLIENT_ID="..."
@@ -43,13 +38,13 @@ export GOOGLE_CLIENT_SECRET="..."
 export GMAIL_REFRESH_TOKEN="..."
 ```
 
-For quick tests, a short-lived access token also works:
+快速测试也可以使用短期 access token：
 
 ```bash
 export GMAIL_ACCESS_TOKEN="..."
 ```
 
-Model runtime can be configured in `config.local.toml`:
+模型运行时可在 `config.local.toml` 中配置：
 
 ```toml
 [model]
@@ -57,20 +52,18 @@ backend = "llamaserver"
 gguf_path = "/Users/hanpengfei/models/Ministral-3-8B-Instruct-2512-Q4_K_M.gguf"
 base_url = "http://localhost:8080/v1"
 
-# Or use a cloud/provider API that exposes /v1/chat/completions:
+# 或使用提供 /v1/chat/completions 的云服务 API：
 # backend = "openai-compatible"
 # model = "your-cloud-model"
 # base_url = "https://api.openai.com/v1"
 # api_key_env = "OPENAI_API_KEY"
 ```
 
-CLI flags such as `--backend`, `--model`, `--base-url`, `--api-key-env`, and
-`--gguf` override the config for one run. Prefer env vars or key files for API
-keys so secrets do not land in shell history.
+`--backend`、`--model`、`--base-url`、`--api-key-env`、`--gguf` 等 CLI 参数可覆盖单次运行的配置。API Key 优先使用环境变量或密钥文件，避免密钥出现在 shell 历史中。
 
-## Preflight
+## 预检查
 
-Preflight does not call the model:
+预检查不调用模型：
 
 ```bash
 cd /Users/hanpengfei/Documents/repo/gmailAgent
@@ -79,13 +72,9 @@ source .venv/bin/activate
 player-support-preflight --config config/config.local.toml
 ```
 
-## Readiness Check
+## 就绪检查
 
-Before trial-running automatic processing, run the readiness check. It verifies
-local config, writable state paths, model configuration, Gmail existing labels,
-and ClickHouse configured tables/columns. For local model backends it checks the
-local `/models` endpoint; for cloud backends it checks that an API key is
-actually configured. It prints a compact safe report and does not process email.
+试运行自动处理前，先运行就绪检查。它会验证本地配置、可写状态路径、模型配置、Gmail 已有标签和 ClickHouse 配置的表/列。对于本地模型后端，检查本地 `/models` 端点；对于云端后端，检查 API Key 是否已实际配置。输出简洁的安全报告，不处理邮件。
 
 ```bash
 player-support-readiness --config config/config.local.toml \
@@ -93,20 +82,17 @@ player-support-readiness --config config/config.local.toml \
   --base-url http://localhost:8080/v1
 ```
 
-Add `--readiness-include-discovery` to also test Gmail unread-project candidate
-discovery without calling the model. If the report is `BLOCKED`, fix those
-items before running the worker. `READY_WITH_WARNINGS` can be used for a dry-run
-trial if the warnings are expected, such as a project with no log table mapping.
+添加 `--readiness-include-discovery` 可在不调用模型的情况下测试 Gmail 未读项目候选发现。如果报告为 `BLOCKED`，先修复这些问题再运行 worker。如果警告是预期的（例如某个项目没有日志表映射），`READY_WITH_WARNINGS` 可用于 dry-run 试运行。
 
-## Local Model
+## 本地模型
 
-After LM Studio downloads a GGUF under `/Users/hanpengfei/models`, find it:
+使用 LM Studio 将 GGUF 模型下载到 `/Users/hanpengfei/models` 后，找到模型文件：
 
 ```bash
 find /Users/hanpengfei/models -name "*.gguf" -type f
 ```
 
-Start `llama-server`:
+启动 `llama-server`：
 
 ```bash
 llama-server \
@@ -116,68 +102,56 @@ llama-server \
   --port 8080
 ```
 
-Run a model-driven request:
+运行一次模型驱动的请求：
 
 ```bash
-python -m examples.player_support_agent.main \
-  --config examples/player_support_agent/config.local.toml \
+player-support-chat --config config/config.local.toml \
   --backend llamaserver \
   --gguf "/Users/hanpengfei/models/path/to/model.gguf" \
   --ask "查看所有项目未读玩家反馈"
 ```
 
-## Cloud Model
+## 云端模型
 
-Use this when the provider exposes an OpenAI-compatible
-`/v1/chat/completions` API with native tool calls:
+当服务提供商提供支持原生工具调用的 OpenAI 兼容 `/v1/chat/completions` API 时使用：
 
 ```bash
 export OPENAI_API_KEY="..."
 
-.venv/bin/python -m examples.player_support_agent.terminal_chat \
-  --config examples/player_support_agent/config.local.toml \
+player-support-chat --config config/config.local.toml \
   --backend openai-compatible \
   --model "your-cloud-model" \
   --base-url https://api.openai.com/v1
 ```
 
-All Gmail, ClickHouse, labeling, draft, and handoff behavior still goes through
-the same Forge tools and safety checks. Cloud mode changes only the model
-client.
+所有 Gmail、ClickHouse、标签、草稿和转交行为仍通过相同的 Forge 工具和安全检查。云端模式仅更换模型客户端。
 
-## Local Control UI
+## 本地 Web 控制界面
 
-The built-in llama.cpp `llama-ui` can chat with the model, but it cannot execute
-Forge tools such as Gmail, ClickHouse, rules, labels, or drafts. For text-based
-control, start the Forge control UI instead:
+内置的 llama.cpp `llama-ui` 可以与模型聊天，但无法执行 Gmail、ClickHouse、规则、标签或草稿等 Forge 工具。如需文本化控制，启动 Forge 控制 UI：
 
 ```bash
-cd /Users/hanpengfei/Documents/repo/forge
-
-.venv/bin/python -m examples.player_support_agent.chat_server \
-  --config examples/player_support_agent/config.local.toml \
+player-support-web --config config/config.local.toml \
   --gguf "/Users/hanpengfei/models/Ministral-3-8B-Instruct-2512-Q4_K_M.gguf" \
   --base-url http://localhost:8080/v1
 ```
 
-Then open:
+然后打开：
 
 ```text
 http://127.0.0.1:8090
 ```
 
-The UI includes buttons for:
+界面包含以下按钮：
 
-- switching between configured model profiles;
-- saving or switching named cloud-model API keys in a local ignored `var/`
-  secret file;
-- preflight and readiness checks;
-- Gmail discovery-only testing;
-- one-shot dry-run processing through the automatic worker path;
-- live Gmail draft creation after the explicit confirmation phrase.
+- 切换已配置的模型 profile；
+- 在本地被忽略的 `var/` 密钥文件中保存或切换命名的云端模型 API Key；
+- 预检查和就绪检查；
+- 仅 Gmail 发现测试；
+- 通过自动 worker 路径的一次性 dry-run 处理；
+- 显式确认后创建正式 Gmail 草稿。
 
-To show both local and cloud model buttons, add optional profiles to
-`config.local.toml`:
+要同时显示本地和云端模型按钮，在 `config.local.toml` 中添加可选 profile：
 
 ```toml
 [model_profiles.local]
@@ -193,12 +167,9 @@ base_url = "https://api.openai.com/v1"
 api_key_env = "OPENAI_API_KEY"
 ```
 
-Model switching is in-process and affects the next Web UI request. The UI never
-prints API keys or token values. The `云 Key` button stores keys under
-`var/player_support_agent/cloud_model_keys/`, which is ignored by Git; leave the
-key value blank in that dialog to switch to an already saved key name.
+模型切换在进程内生效，影响下一次 Web UI 请求。UI 绝不打印 API Key 或 token 值。`云 Key` 按钮将密钥存储在 `var/player_support_agent/cloud_model_keys/` 下（被 Git 忽略）；在对话框中留空密钥值可切换到已保存的密钥名称。
 
-Useful prompts:
+常用提示词：
 
 ```text
 目前所有未读邮件有哪些
@@ -209,124 +180,84 @@ Useful prompts:
 确认正式处理 1 封邮件
 ```
 
-The control UI defaults to dry-run. It only runs the live Gmail mutation path
-when the chat message contains the exact phrase `确认正式处理` or the live
-manual-run button receives that same confirmation in its prompt. The live path
-can create Gmail drafts and apply existing labels, but Gmail sending is still
-not available.
+控制 UI 默认为 dry-run。仅当聊天消息包含精确短语 `确认正式处理`，或 live 手动运行按钮在其提示中收到相同确认时，才会运行正式 Gmail 写入路径。正式路径可创建 Gmail 草稿和应用已有标签，但仍不支持 Gmail 发送。
 
-## Terminal Chat
+## 终端对话
 
-If you want model-driven natural-language control in a terminal, use:
+如果想在终端中使用模型驱动的自然语言控制：
 
 ```bash
-cd /Users/hanpengfei/Documents/repo/forge
-
-.venv/bin/python -m examples.player_support_agent.terminal_chat \
-  --config examples/player_support_agent/config.local.toml \
+player-support-chat --config config/config.local.toml \
   --gguf "/Users/hanpengfei/models/Ministral-3-8B-Instruct-2512-Q4_K_M.gguf" \
   --base-url http://localhost:8080/v1
 ```
 
-The terminal entrypoint sends every question to the local model first. The model
-then decides whether to call Gmail, ClickHouse, support rules, reply templates,
-or no tool. The terminal prints only simple status lines while tools run, then
-prints the model's final natural-language answer.
+终端入口将每个问题先发给本地模型，模型再决定是否调用 Gmail、ClickHouse、客服规则、回复模板或不调用工具。终端在工具运行时只打印简洁的状态行，然后打印模型的最终自然语言回答。
 
-One-shot mode is useful for quick checks:
+一次性模式适用于快速检查：
 
 ```bash
-.venv/bin/python -m examples.player_support_agent.terminal_chat \
-  --ask "查看所有项目未读玩家反馈"
+player-support-chat --ask "查看所有项目未读玩家反馈"
 ```
 
-## Automatic Worker
+## 自动 Worker
 
-The automatic worker is the only entrypoint that directly fetches Gmail
-candidate IDs before model execution. It discovers unread inbox messages under
-existing Gmail project labels, deduplicates them through the processed-message
-store, builds a natural-language task containing project label hints, and then
-calls the same model-driven agent runner used by the terminal and Web UI.
+自动 worker 是唯一在模型执行前直接获取 Gmail 候选 ID 的入口。它发现已有 Gmail 项目标签下的未读收件箱邮件，通过已处理消息存储去重，构建包含项目标签提示的自然语言任务，然后调用与终端和 Web UI 相同的模型驱动 Agent 运行器。
 
-Project-specific behavior is model/tool driven:
+项目专属行为由模型/工具驱动：
 
-- Gmail parent labels identify the project.
-- `label_suffix_by_case_type` can recommend project-local label candidates such
-  as `BlackHole/内购问题`; Gmail tools still validate that the label exists before
-  applying it.
-- `get_relevant_support_rules(project=...)` selects project-specific knowledge
-  when configured, otherwise it falls back to the default rule file.
-- `get_clickhouse_schema(project=..., case_type=...)` selects project-specific
-  whitelisted tables. When a project is explicit but no table map exists, the
-  tool returns no allowed tables instead of falling back to another project's
-  logs.
-- With `require_project_for_queries = true`, ClickHouse tools also reject
-  project-less log queries, so the model must infer the project before querying
-  logs.
-- The model still decides whether logs are needed, which SQL to validate, which
-  existing label to apply, and whether to draft or hand off.
+- Gmail 父标签标识项目。
+- `label_suffix_by_case_type` 可推荐项目内标签候选，例如 `BlackHole/内购问题`；Gmail 工具仍会在应用前校验标签存在。
+- `get_relevant_support_rules(project=...)` 在配置了项目专属规则时选择之，否则回退到默认规则文件。
+- `get_clickhouse_schema(project=..., case_type=...)` 选择项目专属的白名单表。当项目明确但不存在表映射时，工具不返回任何允许的表，而不是回退到另一个项目的日志。
+- 启用 `require_project_for_queries = true` 时，ClickHouse 工具还会拒绝无项目的日志查询，因此模型必须先推断出项目再查询日志。
+- 模型仍决定是否需要日志、校验哪条 SQL、应用哪个已有标签、是起草回复还是转人工。
 
-For each selected Gmail message, the model must call `save_case_state` before
-its final answer. The worker records those per-message outcomes as
-`draft_created`, `human_review`, `failed`, or `skipped`; if the model does not
-save an outcome for a selected message, that message is marked `failed` so it
-can be retried or investigated instead of being silently treated as processed.
-Failed automatic cases are escalated through the configured notification mode.
-The default `file` mode writes a handoff note under
-`var/player_support_agent/handoffs`; set `[notify].mode = "feishu"` and
-`feishu_webhook_url` to push the same compact failure summary to a Feishu bot.
-Terminal output stays brief and only shows the high-level model/tool/handoff
-status.
+对于每封选中的 Gmail 邮件，模型必须在最终回答前调用 `save_case_state`。Worker 将每封邮件的结果记录为 `draft_created`、`human_review`、`failed` 或 `skipped`；如果模型没有为选中邮件保存结果，该邮件将被标记为 `failed`，以便重试或调查，而不是被静默地视为已处理。失败的自动处理 case 通过配置的通知方式升级。默认 `file` 模式将转交笔记写入 `var/player_support_agent/handoffs`；设置 `[notify].mode = "feishu"` 和 `feishu_webhook_url` 可将相同简洁的失败摘要推送到飞书机器人。终端输出保持简洁，仅显示高层的模型/工具/转交状态。
 
-Run once in dry-run mode:
+dry-run 模式下运行一次：
 
 ```bash
-.venv/bin/python -m examples.player_support_agent.auto_worker \
-  --config examples/player_support_agent/config.local.toml \
+player-support-worker --config config/config.local.toml \
   --gguf "/Users/hanpengfei/models/Ministral-3-8B-Instruct-2512-Q4_K_M.gguf" \
   --base-url http://localhost:8080/v1 \
   --max-candidates 20 \
   --max-new 5
 ```
 
-Run repeatedly:
+循环运行：
 
 ```bash
-.venv/bin/python -m examples.player_support_agent.auto_worker \
-  --config examples/player_support_agent/config.local.toml \
+player-support-worker --config config/config.local.toml \
   --interval-seconds 300
 ```
 
-Add `--live` only when you want the worker to create Gmail drafts, apply existing
-labels, and write processing state. Gmail sending is not available.
+仅当你希望 worker 创建 Gmail 草稿、应用已有标签并写入处理状态时，才添加 `--live`。不支持 Gmail 发送。
 
-## Manual Trigger
+## 手动触发
 
-For a one-off test of “Gmail discovery -> model processing”, use the manual
-trigger. It defaults to a separate test store, so it will not pollute the normal
-automatic processed-message store:
+用于一次性测试「Gmail 发现 → 模型处理」流程。它默认使用独立的测试存储，不会污染正常的自动处理消息存储：
 
 ```bash
-.venv/bin/python -m examples.player_support_agent.manual_trigger \
-  --config examples/player_support_agent/config.local.toml \
+player-support-manual --config config/config.local.toml \
   --gguf "/Users/hanpengfei/models/Ministral-3-8B-Instruct-2512-Q4_K_M.gguf" \
   --base-url http://localhost:8080/v1 \
   --max-candidates 20 \
   --max-new 1
 ```
 
-Useful test flags:
+常用测试参数：
 
 ```bash
-# Only check whether Gmail discovery finds candidates; do not call the model.
+# 仅检查 Gmail 发现是否找到候选；不调用模型。
 --discovery-only
 
-# Re-run a discovered candidate even if the manual test store already marked it done.
+# 即使手动测试存储已标记完成，也重新运行发现的候选。
 --ignore-store
 
-# Test a custom Gmail query, for example one project label.
+# 测试自定义 Gmail 查询，例如某个项目标签。
 --query 'is:unread in:inbox -in:spam -in:trash label:"BlackHole"'
 
-# Use the real automatic worker state instead of the manual test store.
+# 使用真实的自动 worker 状态，而非手动测试存储。
 --use-config-store
 ```
