@@ -1,0 +1,1936 @@
+# Auto-generated legacy reply template catalog.
+# Source: Desktop/回复模板 — re-run scripts/import_legacy_reply_templates.py to refresh.
+
+[[templates]]
+id = "blackhole_entry_1"
+summary = "您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_entry_1.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_entry_2"
+summary = "您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["卡册"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_entry_2.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_entry_3"
+summary = "您好，对于您的建议我已经反馈给产品部门"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["卡册"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_entry_3.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_0757875e09"
+summary = "找不到关卡内物品"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["找不到关卡内物品"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_0757875e09.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！", "金币"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_6"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！", "卡册"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_6.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_7"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！", "卡册"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_7.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_8"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！", "磁铁", "炸弹"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_8.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_9"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_9.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_10"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！", "金币"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_10.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_11"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_11.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_12"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_12.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_13"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_13.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_14"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！", "广告", "rv", "金币"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_14.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_15"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_15.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_16"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_16.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_topic_9a7bd6ed5e_17"
+summary = "润色并翻译：您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_topic_9a7bd6ed5e_17.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_entry_18"
+summary = "Hello "
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["连胜"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_entry_18.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_entry_19"
+summary = "如果是这个意思的话，您选择退出关卡确实会损失游戏进度或者奖励，我们的多次确认弹窗就是为了让您不损失进度而设计的，避免您误触后退出关卡导致连胜进度损失等"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["连胜"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_entry_19.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_entry_20"
+summary = "您好！"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["连胜", "金币"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_entry_20.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_entry_21"
+summary = "理解您的意思，您不知道退出关卡的按钮在哪，导致您误以为continue弹窗中的按钮是退出关卡，然后消耗了您的金币。您可以点击continue弹窗右上角的叉号按钮退出关卡，目前多次退出确认的逻辑肯呢个会让人产生误解，我会将该情况反馈给产品部门"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["金币"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_entry_21.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_hello"
+summary = "润色并翻译：Hello"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：Hello"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_hello.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_hello_23"
+summary = "润色并翻译：Hello"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：Hello", "连胜"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_hello_23.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_hello_24"
+summary = "润色并翻译：Hello"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：Hello"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_hello_24.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_hello_25"
+summary = "润色并翻译：Hello"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：Hello"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_hello_25.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "blackhole_hello_26"
+summary = "润色并翻译：Hello"
+projects = ["BlackHole"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：Hello", "磁铁", "炸弹"]
+body_path = "templates/projects/BlackHole/zh-CN/blackhole_hello_26.md"
+priority = 50
+source_file = "BlackHole反馈.txt"
+
+[[templates]]
+id = "busfever_entry_1"
+summary = "你好，感谢您对我们游戏的喜爱，能玩到823关代表您认可我们的游戏"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_entry_1.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_entry_2"
+summary = "您好"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["pass", "vip", "连胜"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_entry_2.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_entry_3"
+summary = "您好"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_entry_3.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_1580250f43"
+summary = "额外车位"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["额外车位", "vip", "金币", "车位"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_1580250f43.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_aa0462f1b0"
+summary = "润色并翻译：您好"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好", "广告", "rv"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_aa0462f1b0.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_9a7bd6ed5e"
+summary = "润色并翻译：您好！"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_9a7bd6ed5e.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_entry_7"
+summary = "您好"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_entry_7.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_9a7bd6ed5e_8"
+summary = "润色并翻译：您好！"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好！", "消防员"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_9a7bd6ed5e_8.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_9a7bd6ed5e_9"
+summary = "润色并翻译：您好！"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_9a7bd6ed5e_9.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_9a7bd6ed5e_10"
+summary = "润色并翻译：您好！"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_9a7bd6ed5e_10.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_9a7bd6ed5e_11"
+summary = "润色并翻译：您好！"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好！", "消防员"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_9a7bd6ed5e_11.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_9a7bd6ed5e_12"
+summary = "润色并翻译：您好！"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好！", "金币"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_9a7bd6ed5e_12.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_vip"
+summary = "vip车"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["vip车", "vip"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_vip.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_vip_14"
+summary = "vip每日奖励"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["vip每日奖励", "vip", "断网"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_vip_14.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_entry_15"
+summary = "感谢您与我们联系，也很抱歉得知您在游戏过程中遇到了闪退问题，这确实会对您的体验造成影响，我们对此深表遗憾。"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["闪退"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_entry_15.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_entry_16"
+summary = "关于您提到的情况：由于游戏在关卡过程中发生异常崩溃，导致连胜中断，从而失去了额外停车位以及关卡内的排序加成道具。对此我们非常理解您的感受。遗憾的是，由于我们的游戏目前为离线运行，相关数据仅保存在本地设备中，在发生异常中断后，系统无法自动恢复"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["连胜", "车位"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_entry_16.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_entry_17"
+summary = "同时，为了尽量避免类似闪退问题再次发生，您可以尝试以下常见解决方法："
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["闪退"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_entry_17.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_2b527971ed"
+summary = "更新游戏版本"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["更新游戏版本"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_2b527971ed.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_f8a8fd5f27"
+summary = "重启设备"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["重启设备"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_f8a8fd5f27.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_a0593c0ea9"
+summary = "检查设备存储空间"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["检查设备存储空间"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_a0593c0ea9.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_d71652b0ed"
+summary = "关闭后台应用"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["关闭后台应用"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_d71652b0ed.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_0209f1c97b"
+summary = "检查系统版本"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["检查系统版本"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_0209f1c97b.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_entry_23"
+summary = "如果在尝试以上方法后问题仍然频繁出现，欢迎您再次联系我们，并尽可能提供发生问题的关卡编号或截图，我们会进一步协助排查。"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_entry_23.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_aa0462f1b0_24"
+summary = "润色并翻译：您好"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好", "连胜"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_aa0462f1b0_24.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_aa0462f1b0_25"
+summary = "润色并翻译：您好"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_aa0462f1b0_25.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_aa0462f1b0_26"
+summary = "润色并翻译：您好"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_aa0462f1b0_26.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_aa0462f1b0_27"
+summary = "润色并翻译：您好"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_aa0462f1b0_27.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_aa0462f1b0_28"
+summary = "润色并翻译：您好"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好", "连胜"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_aa0462f1b0_28.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_aa0462f1b0_29"
+summary = "润色并翻译：您好"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_aa0462f1b0_29.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "busfever_topic_9a7bd6ed5e_30"
+summary = "润色并翻译：您好！"
+projects = ["BusFever"]
+case_types = ["gameplay_misunderstanding", "bug", "crash_or_freeze", "other"]
+triggers = ["润色并翻译：您好！", "存档", "退款", "vip", "金币"]
+body_path = "templates/projects/BusFever/zh-CN/busfever_topic_9a7bd6ed5e_30.md"
+priority = 50
+source_file = "BusFever反馈.txt"
+
+[[templates]]
+id = "numbercrush_topic_9a7bd6ed5e"
+summary = "润色并翻译：您好！"
+projects = ["NumberCrush"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/NumberCrush/zh-CN/numbercrush_topic_9a7bd6ed5e.md"
+priority = 50
+source_file = "NumberCrash反馈.txt"
+
+[[templates]]
+id = "numbercrush_entry_2"
+summary = "您好"
+projects = ["NumberCrush"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+body_path = "templates/projects/NumberCrush/zh-CN/numbercrush_entry_2.md"
+priority = 50
+source_file = "NumberCrash反馈.txt"
+
+[[templates]]
+id = "numbercrush_topic_bfdcd39026"
+summary = "催新关卡"
+projects = ["NumberCrush"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["催新关卡"]
+body_path = "templates/projects/NumberCrush/zh-CN/numbercrush_topic_bfdcd39026.md"
+priority = 50
+source_file = "NumberCrash反馈.txt"
+
+[[templates]]
+id = "numbercrush_entry_4"
+summary = "感谢您对我们游戏的喜爱，您进入关卡以后，点击关卡界面左上角的暂停按钮，在弹出的弹窗中点击最右边的replay按钮即可，如我截图所示，希望能帮到您"
+projects = ["NumberCrush"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+body_path = "templates/projects/NumberCrush/zh-CN/numbercrush_entry_4.md"
+priority = 50
+source_file = "NumberCrash反馈.txt"
+
+[[templates]]
+id = "numbercrush_topic_9a7bd6ed5e_5"
+summary = "润色并翻译：您好！"
+projects = ["NumberCrush"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/NumberCrush/zh-CN/numbercrush_topic_9a7bd6ed5e_5.md"
+priority = 50
+source_file = "NumberCrash反馈.txt"
+
+[[templates]]
+id = "numbercrush_topic_9a7bd6ed5e_6"
+summary = "润色并翻译：您好！"
+projects = ["NumberCrush"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好！"]
+body_path = "templates/projects/NumberCrush/zh-CN/numbercrush_topic_9a7bd6ed5e_6.md"
+priority = 50
+source_file = "NumberCrash反馈.txt"
+
+[[templates]]
+id = "numbercrush_topic_aa0462f1b0"
+summary = "润色并翻译：您好"
+projects = ["NumberCrush"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好"]
+body_path = "templates/projects/NumberCrush/zh-CN/numbercrush_topic_aa0462f1b0.md"
+priority = 50
+source_file = "NumberCrash反馈.txt"
+
+[[templates]]
+id = "numbercrush_topic_30c3e213bd"
+summary = "润色并翻译：感谢您的回复，我可能误解了您的意思"
+projects = ["NumberCrush"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：感谢您的回复", "我可能误解了您的意思"]
+body_path = "templates/projects/NumberCrush/zh-CN/numbercrush_topic_30c3e213bd.md"
+priority = 50
+source_file = "NumberCrash反馈.txt"
+
+[[templates]]
+id = "numbercrush_topic_aa0462f1b0_9"
+summary = "润色并翻译：您好"
+projects = ["NumberCrush"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：您好"]
+body_path = "templates/projects/NumberCrush/zh-CN/numbercrush_topic_aa0462f1b0_9.md"
+priority = 50
+source_file = "NumberCrash反馈.txt"
+
+[[templates]]
+id = "numbercrush_topic_27e4fe4c3f"
+summary = "润色并翻译：好"
+projects = ["NumberCrush"]
+case_types = ["gameplay_misunderstanding", "bug", "feature_request", "other"]
+triggers = ["润色并翻译：好"]
+body_path = "templates/projects/NumberCrush/zh-CN/numbercrush_topic_27e4fe4c3f.md"
+priority = 50
+source_file = "NumberCrash反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_1"
+summary = "您好，感谢您的反馈"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告", "卡死", "卡顿"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_1.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_7e432b8988"
+summary = "润色并翻译：您好，感谢您对我们游戏的喜爱。"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["润色并翻译：您好", "感谢您对我们游戏的喜爱。", "广告", "rv"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_7e432b8988.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_hello"
+summary = "润色并翻译：Hello"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["润色并翻译：Hello", "去广告", "广告", "rv", "金币"]
+body_path = "templates/replies/zh-CN/legacy_ad_hello.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_hello_4"
+summary = "润色并翻译：Hello"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["润色并翻译：Hello", "广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_hello_4.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_5"
+summary = "您好！"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_5.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_94da7ae277"
+summary = "未查询到去广告购买记录"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["未查询到去广告购买记录", "去广告", "广告", "订单"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_94da7ae277.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_7"
+summary = "您好，感谢您对我们游戏的喜爱，非常抱歉给您带来了不好的体验"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告", "断网"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_7.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_8"
+summary = "明白您的意思，请问您现在出现的广告是在完成一个关卡后出现的插屏广告还是需要点击按钮观看广告然后给奖励的rv广告"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告", "rv"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_8.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_9a7bd6ed5e"
+summary = "润色并翻译；您好！"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["润色并翻译；您好！", "去广告", "广告", "rv"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_9a7bd6ed5e.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_9a7bd6ed5e_10"
+summary = "润色并翻译；您好！"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["润色并翻译；您好！", "去广告", "广告", "rv"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_9a7bd6ed5e_10.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_9a7bd6ed5e_11"
+summary = "润色并翻译；您好！"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["润色并翻译；您好！", "去广告", "广告", "rv", "金币"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_9a7bd6ed5e_11.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_45092c1436"
+summary = "设备广告重置"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["设备广告重置", "广告", "断网"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_45092c1436.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_13"
+summary = "应该是设备或者游戏的性能有问题，请问您的手机存储空间剩余是否还充足，如果不充足的话可以考虑删除一些其他不常用的app，如果您还想继续游玩我们的游戏的话，切记千万不可随意删除咱们的游戏然后重新安装，这会导致您的存档游戏进度重置为第一关"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["存档"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_13.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_rv"
+summary = "看完rv没有获得奖励"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["看完rv没有获得奖励", "广告", "rv"]
+body_path = "templates/replies/zh-CN/legacy_ad_rv.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_9a7bd6ed5e_15"
+summary = "润色并翻译：您好！"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["润色并翻译：您好！", "广告", "rv"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_9a7bd6ed5e_15.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_16"
+summary = "不客气，能帮到您是我的荣幸，游戏内的广告确实偶尔会出现问题，这里给您几个tips"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告", "卡死"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_16.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_17"
+summary = "您好，感谢您对我们游戏的喜爱，对于您的情况我们非常抱歉"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_17.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_9a7bd6ed5e_18"
+summary = "润色并翻译：您好！"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["润色并翻译：您好！", "去广告", "广告", "rv"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_9a7bd6ed5e_18.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_19"
+summary = "初步判断应该是您在点击观看rv广告时，广告的加载和播放出现了卡顿，您可以尝试在点击rv按钮时，不做任何操作，等待一段时间，看广告是否能播放出来，如果可以播放，代表广告加载时间过长，影响了游戏内的操作，我们会尝试优化这个问题"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告", "rv", "卡顿"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_19.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_9a7bd6ed5e_20"
+summary = "润色并翻译：您好！"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["润色并翻译：您好！", "去广告", "广告", "rv"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_9a7bd6ed5e_20.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_21"
+summary = "您好！"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告", "卡死"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_21.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_22"
+summary = "感谢您的反馈"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告", "金币", "userid"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_22.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_23"
+summary = "您好，感谢您的反馈由于您修改了主题，我们目前无法分辨您游玩的哪一款游戏，您可以重新发送带主题的邮件，如果您之前看rv给奖励的逻辑是正常的，那应该就不是游戏内逻辑问题，可能是广告出了问题，您可以尝试调整您的网络，或者重置谷歌账号设置里的广告i"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告", "rv"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_23.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_id"
+summary = "重置广告id"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["重置广告id", "广告", "断网"]
+body_path = "templates/replies/zh-CN/legacy_ad_id.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_25"
+summary = "感谢您的耐心反馈。对于广告给您带来的困扰，我们感同身受。"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_25.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_26"
+summary = "如果某个广告总是让游戏卡住，就像是“路堵住了”，您可以尝试以下三个简单的办法来给手机“打打扫，减减负”："
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_26.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_27"
+summary = "方法一：稍后重试：有时广告填充受限于广告商在您所在地区的实时库存。如果尝试上述操作后仍未解决，建议您间隔一段时间再尝试点击。"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_27.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_4ccd27fc8f"
+summary = "手机如果“装得太满”，运行起来就会很吃力。"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["手机如果“装得太满”", "运行起来就会很吃力。"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_4ccd27fc8f.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_29"
+summary = "方法三：给手机“歇口气”（清理运行环境）"
+case_types = ["ad_issue", "ads_after_purchase"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_29.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_5be90bb7b9"
+summary = "如果手机好几天没关机了，可能会有些“累”。"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["如果手机好几天没关机了", "可能会有些“累”。"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_5be90bb7b9.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_rv_31"
+summary = "rv广告不加载"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["rv广告不加载", "广告", "rv"]
+body_path = "templates/replies/zh-CN/legacy_ad_rv_31.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_topic_9b943d82b6"
+summary = "润色并翻译：您好，"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["润色并翻译：您好", "广告", "断网"]
+body_path = "templates/replies/zh-CN/legacy_ad_topic_9b943d82b6.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_33"
+summary = "感谢您的反馈。对于您遇到的广告问题，我们非常理解。"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_33.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_34"
+summary = "如果您持续受到特定广告内容的干扰，可以尝试重置设备的广告 ID，以刷新广告商对您偏好的识别。在**亚马逊平板（Fire Tablet）**上的操作步骤如下："
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_34.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_id_35"
+summary = "重置广告 ID："
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["重置广告", "ID：", "广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_id_35.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_36"
+summary = "找到并点击**“安全与隐私” (Security & Privacy)**；"
+case_types = ["ad_issue", "ads_after_purchase"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_36.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_37"
+summary = "向下滑动找到**“广告 ID” (Advertising ID)**；"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_37.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_38"
+summary = "点击**“重置广告 ID” (Reset Advertising ID)**。完成后，系统将为您生成一个新的标识符。"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_38.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_39"
+summary = "调整网络环境： 您也可以尝试切换不同的网络（如 Wi-Fi 或手机热点）。操作后，请彻底强制关闭游戏并重新进入，这有助于系统重新匹配不同类型的广告。"
+case_types = ["ad_issue", "ads_after_purchase"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_39.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_ad_entry_40"
+summary = "深度重启设备： 如果问题依然存在，建议您将设备关机并静置 5 分钟后重新开启，随后再进入游戏查看效果。"
+case_types = ["ad_issue", "ads_after_purchase"]
+body_path = "templates/replies/zh-CN/legacy_ad_entry_40.md"
+priority = 45
+source_file = "广告反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_440ee0853a"
+summary = "润色并翻译：你好"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：你好", "内购", "订单"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_440ee0853a.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_ios_restore"
+summary = "ios restore功能"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["ios", "restore功能", "去广告", "restore", "广告", "金币"]
+body_path = "templates/replies/zh-CN/legacy_payment_ios_restore.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_ios_restore_3"
+summary = "不同ios设备间restore去广告"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["不同ios设备间restore去广告", "去广告", "restore", "广告", "金币"]
+body_path = "templates/replies/zh-CN/legacy_payment_ios_restore_3.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_440ee0853a_4"
+summary = "润色并翻译：你好"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：你好", "内购"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_440ee0853a_4.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_440ee0853a_5"
+summary = "润色并翻译：你好"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：你好", "内购", "金币"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_440ee0853a_5.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_440ee0853a_6"
+summary = "润色并翻译：你好"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：你好", "金币", "piggybank"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_440ee0853a_6.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_440ee0853a_7"
+summary = "润色并翻译：你好"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：你好", "内购", "订单"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_440ee0853a_7.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_entry_8"
+summary = "再次感谢你喜欢我们的游戏～ 对于给你带来的困扰，我们深感抱歉！目前我们的离线游戏暂不支持存档恢复或道具补发功能，不然真的很想为你补偿相关损失～ 不过请你放心，我们正在积极开发这些实用功能，希望能尽快为你提供更完善的体验～ 你的支持始终是我们"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["存档"]
+body_path = "templates/replies/zh-CN/legacy_payment_entry_8.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_aa0462f1b0"
+summary = "润色并翻译：您好"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：您好"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_aa0462f1b0.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_entry_10"
+summary = "我们查看了您在游戏里的行为记录，发现您当前账号没有任何购买记录，请您回忆下是否有过删除游戏后重新安装的行为，我们游戏目前没有恢复存档功能，删除重进后游戏会被重置。"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["存档", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_payment_entry_10.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_entry_11"
+summary = "您如果在我们的游戏内产生了支付，是需要通过苹果账号进行支付的，您可以通过我提供的方法查看您苹果账号里的购买记录"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+body_path = "templates/replies/zh-CN/legacy_payment_entry_11.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_entry_12"
+summary = "您从苹果商店进行的游戏内购我们无权进行退款，您可以通过以下说明自己退款"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_payment_entry_12.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_440ee0853a_13"
+summary = "润色并翻译：你好"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：你好"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_440ee0853a_13.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_entry_14"
+summary = "我们查看了您在游戏里的行为记录，发现您当前账号没有任何购买记录，请您回忆下是否有过删除游戏后重新安装的行为，我们游戏目前没有恢复存档功能，删除重进后游戏会被重置。"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["存档", "退款"]
+body_path = "templates/replies/zh-CN/legacy_payment_entry_14.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_440ee0853a_15"
+summary = "润色并翻译：你好"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：你好"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_440ee0853a_15.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_fd99c2bae1"
+summary = "再次对于给您带来的困扰深感抱歉"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["再次对于给您带来的困扰深感抱歉", "内购", "退款", "订单", "superbundle"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_fd99c2bae1.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_da39a3ee5e"
+summary = "润色并翻译："
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：", "内购", "订单"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_da39a3ee5e.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_aa0462f1b0_18"
+summary = "润色并翻译：您好"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：您好", "superbundle"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_aa0462f1b0_18.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_aa0462f1b0_19"
+summary = "润色并翻译：您好"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：您好", "去广告", "广告"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_aa0462f1b0_19.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_entry_20"
+summary = "Hello "
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+body_path = "templates/replies/zh-CN/legacy_payment_entry_20.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_entry_21"
+summary = "我们查看了您在游戏里的行为记录，目前看您购买的所有商品都已成功到账。"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["pass"]
+body_path = "templates/replies/zh-CN/legacy_payment_entry_21.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_hello"
+summary = "润色并翻译：Hello"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：Hello", "内购"]
+body_path = "templates/replies/zh-CN/legacy_payment_hello.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_hello_23"
+summary = "润色并翻译：Hello"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：Hello", "内购"]
+body_path = "templates/replies/zh-CN/legacy_payment_hello_23.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_d31f3d25f2"
+summary = "润色并翻译：感谢您的耐心反馈"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：感谢您的耐心反馈", "订单"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_d31f3d25f2.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_9dcec85de4"
+summary = "润色并翻译：很抱歉得知您在我们的游戏中遇到了问题，给您的体验带来了影响。"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：很抱歉得知您在我们的游戏中遇到了问题", "给您的体验带来了影响。", "存档", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_9dcec85de4.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_b8ed7162ae"
+summary = "安卓重装游戏恢复购买"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["安卓重装游戏恢复购买", "去广告", "存档", "广告", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_b8ed7162ae.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_hello_27"
+summary = "润色并翻译：Hello"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：Hello", "内购"]
+body_path = "templates/replies/zh-CN/legacy_payment_hello_27.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_entry_28"
+summary = "Hello "
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+body_path = "templates/replies/zh-CN/legacy_payment_entry_28.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_entry_29"
+summary = "我们查看了您在游戏里的行为记录，目前看您购买的所有商品都在UTC时间的2026-01-14T18:53:45Z已成功到账,从您的记录来看您也已经是用来您的10000金币。"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["订单", "金币"]
+body_path = "templates/replies/zh-CN/legacy_payment_entry_29.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_da39a3ee5e_30"
+summary = "润色并翻译："
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：", "去广告", "广告", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_da39a3ee5e_30.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_da39a3ee5e_31"
+summary = "润色并翻译："
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：", "广告"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_da39a3ee5e_31.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_789af94eee"
+summary = "只购买了三天去广告"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["只购买了三天去广告", "去广告", "广告"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_789af94eee.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_8fa6d52ab6"
+summary = "安卓去广告服务退款"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["安卓去广告服务退款", "去广告", "存档", "广告", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_8fa6d52ab6.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_da39a3ee5e_34"
+summary = "润色并翻译："
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：", "去广告", "广告", "订单", "pass"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_da39a3ee5e_34.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_payment_topic_9a7bd6ed5e"
+summary = "润色并翻译：您好！"
+case_types = ["payment", "ads_after_purchase", "pass_purchase_misunderstanding"]
+triggers = ["润色并翻译：您好！", "存档", "退款", "vip", "金币"]
+body_path = "templates/replies/zh-CN/legacy_payment_topic_9a7bd6ed5e.md"
+priority = 45
+source_file = "支付反馈.txt"
+
+[[templates]]
+id = "legacy_save_entry_1"
+summary = "您好，感谢您对我们游戏的喜爱"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+body_path = "templates/replies/zh-CN/legacy_save_entry_1.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_entry_2"
+summary = "请问您是因为我们的游戏出现了问题才重新安装游戏还是其他原因，比如重置设备或者更换设备等"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+body_path = "templates/replies/zh-CN/legacy_save_entry_2.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_entry_3"
+summary = "遗憾的是，我们目前不支持存档恢复，如果你删除过游戏或者更换了游玩设备，存档无法恢复，不过我们在积极研发该功能，我们会尽快上线优化我们的游戏，再次对您受到的损失感到抱歉"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["存档"]
+body_path = "templates/replies/zh-CN/legacy_save_entry_3.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_e0fb7398e3"
+summary = "游戏卡死加载不进去"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["游戏卡死加载不进去", "存档", "内购", "退款", "订单", "卡死"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_e0fb7398e3.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_d810e0ec67"
+summary = "润色并翻译：您好，感谢您对我们游戏的喜爱，对您的损失我们深表遗憾"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：您好", "感谢您对我们游戏的喜爱", "对您的损失我们深表遗憾", "存档", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_d810e0ec67.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_d810e0ec67_6"
+summary = "润色并翻译：您好，感谢您对我们游戏的喜爱，对您的损失我们深表遗憾"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：您好", "感谢您对我们游戏的喜爱", "对您的损失我们深表遗憾", "存档", "内购", "退款"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_d810e0ec67_6.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_d810e0ec67_7"
+summary = "润色并翻译：您好，感谢您对我们游戏的喜爱，对您的损失我们深表遗憾"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：您好", "感谢您对我们游戏的喜爱", "对您的损失我们深表遗憾", "存档", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_d810e0ec67_7.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_d810e0ec67_8"
+summary = "润色并翻译：您好，感谢您对我们游戏的喜爱，对您的损失我们深表遗憾"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：您好", "感谢您对我们游戏的喜爱", "对您的损失我们深表遗憾", "存档", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_d810e0ec67_8.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_ios"
+summary = "ios存档丢失"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["ios存档丢失", "去广告", "restore", "存档", "广告", "内购", "退款"]
+body_path = "templates/replies/zh-CN/legacy_save_ios.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_d810e0ec67_10"
+summary = "润色并翻译：您好，感谢您对我们游戏的喜爱，对您的损失我们深表遗憾"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：您好", "感谢您对我们游戏的喜爱", "对您的损失我们深表遗憾", "存档", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_d810e0ec67_10.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_b7757ed8a9"
+summary = "润色并翻译：您好，感谢您对我们游戏的喜爱"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：您好", "感谢您对我们游戏的喜爱", "广告", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_b7757ed8a9.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_entry_12"
+summary = "请问您是因为我们的游戏出现了什么问题导致崩溃"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_save_entry_12.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_entry_13"
+summary = "遗憾的是，我们目前不支持存档恢复，如果你删除过游戏或者更换了游玩设备，存档无法恢复，不过我们在积极研发该功能，我们会尽快上线优化我们的游戏，再次对您受到的损失感到抱歉"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["存档"]
+body_path = "templates/replies/zh-CN/legacy_save_entry_13.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_entry_14"
+summary = "如果您确实删除并重新安装过游戏，可否告诉我们您当时为什么删除游戏，是在游戏里遇到了什么问题还是怎样，您的反馈会帮助我们更有效的优化游戏，非常感激"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+body_path = "templates/replies/zh-CN/legacy_save_entry_14.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_075d08256e"
+summary = "润色并翻译：您好，感谢您对我们游戏的喜爱，对您的处境我们深表理解"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：您好", "感谢您对我们游戏的喜爱", "对您的处境我们深表理解", "存档"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_075d08256e.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_9b943d82b6"
+summary = "润色并翻译：您好，"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：您好", "存档"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_9b943d82b6.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_123184b8ff"
+summary = "删除游戏后找回进度"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["删除游戏后找回进度", "存档", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_123184b8ff.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_9b943d82b6_18"
+summary = "润色并翻译：您好，"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：您好", "存档"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_9b943d82b6_18.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_entry_19"
+summary = "Hello "
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["存档"]
+body_path = "templates/replies/zh-CN/legacy_save_entry_19.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_hello"
+summary = "润色并翻译：Hello"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：Hello", "存档"]
+body_path = "templates/replies/zh-CN/legacy_save_hello.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_entry_21"
+summary = "某些设备的数据互传功能有可能可以将您的游戏数据传给相同品牌的其他设备，祝贺您操作成功，后续我也将这个点子提供给其他玩家，非常感谢您的反馈"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+body_path = "templates/replies/zh-CN/legacy_save_entry_21.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_b7757ed8a9_22"
+summary = "润色并翻译：您好，感谢您对我们游戏的喜爱"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["润色并翻译：您好", "感谢您对我们游戏的喜爱"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_b7757ed8a9_22.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "legacy_save_topic_57979b3a5c"
+summary = "苹果备份"
+case_types = ["lost_save", "save_transfer", "account_binding"]
+triggers = ["苹果备份", "去广告", "restore", "存档", "广告"]
+body_path = "templates/replies/zh-CN/legacy_save_topic_57979b3a5c.md"
+priority = 45
+source_file = "存档相关.txt"
+
+[[templates]]
+id = "grillmaster_topic_9a7bd6ed5e"
+summary = "润色并翻译：您好！"
+projects = ["Grill Master"]
+case_types = ["gameplay_misunderstanding", "bug", "ad_issue", "other"]
+triggers = ["润色并翻译：您好！", "烤串"]
+body_path = "templates/projects/Grill Master/zh-CN/grillmaster_topic_9a7bd6ed5e.md"
+priority = 50
+source_file = "烤串反馈.txt"
+
+[[templates]]
+id = "grillmaster_topic_9a7bd6ed5e_2"
+summary = "润色并翻译：您好！"
+projects = ["Grill Master"]
+case_types = ["gameplay_misunderstanding", "bug", "ad_issue", "other"]
+triggers = ["润色并翻译：您好！", "广告", "rv"]
+body_path = "templates/projects/Grill Master/zh-CN/grillmaster_topic_9a7bd6ed5e_2.md"
+priority = 50
+source_file = "烤串反馈.txt"
+
+[[templates]]
+id = "grillmaster_entry_3"
+summary = "纯瞎想昂，觉得咱们得游戏对我自己来说都没有那种爽感的表达，可能是看凡人修仙传看多了，喜欢一个炸裂的效果"
+projects = ["Grill Master"]
+case_types = ["gameplay_misunderstanding", "bug", "ad_issue", "other"]
+body_path = "templates/projects/Grill Master/zh-CN/grillmaster_entry_3.md"
+priority = 50
+source_file = "烤串反馈.txt"
+
+[[templates]]
+id = "grillmaster_topic_9a7bd6ed5e_4"
+summary = "润色并翻译：您好！"
+projects = ["Grill Master"]
+case_types = ["gameplay_misunderstanding", "bug", "ad_issue", "other"]
+triggers = ["润色并翻译：您好！", "卡顿"]
+body_path = "templates/projects/Grill Master/zh-CN/grillmaster_topic_9a7bd6ed5e_4.md"
+priority = 50
+source_file = "烤串反馈.txt"
+
+[[templates]]
+id = "legacy_mail_topic_a160cea18a"
+summary = "当玩家因为游戏未知问题删除游戏时"
+triggers = ["当玩家因为游戏未知问题删除游戏时"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_a160cea18a.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_2"
+summary = "但目前我们的游戏没有存档恢复功能，由于您删除了游戏，您在游戏内的购买记录也会一并删除，我们建议您现将在我们游戏内购买的订单进行退款，然后在新安装的游戏内重新购买VIP。"
+triggers = ["存档", "内购", "退款", "订单", "vip"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_2.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_f508f7af0f"
+summary = "当玩家反馈金币消耗异常变快时"
+triggers = ["当玩家反馈金币消耗异常变快时", "金币"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_f508f7af0f.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_fd99c2bae1"
+summary = "再次对于给您带来的困扰深感抱歉"
+triggers = ["再次对于给您带来的困扰深感抱歉", "金币"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_fd99c2bae1.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_3"
+summary = "3、当玩家说购买未到账或者存档丢失时"
+triggers = ["当玩家说购买未到账或者存档丢失时", "存档"]
+body_path = "templates/replies/zh-CN/legacy_mail_3.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_fd99c2bae1_6"
+summary = "再次对于给您带来的困扰深感抱歉"
+triggers = ["再次对于给您带来的困扰深感抱歉", "存档", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_fd99c2bae1_6.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_fd99c2bae1_7"
+summary = "再次对于给您带来的困扰深感抱歉"
+triggers = ["再次对于给您带来的困扰深感抱歉"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_fd99c2bae1_7.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_4"
+summary = "4、当玩家说游戏卡顿，但是未提供具体的场景或者时机时"
+triggers = ["当玩家说游戏卡顿", "但是未提供具体的场景或者时机时", "卡顿"]
+body_path = "templates/replies/zh-CN/legacy_mail_4.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_5"
+summary = "5、当玩家遇到问题但未明确具体问题内容时"
+triggers = ["当玩家遇到问题但未明确具体问题内容时", "卡顿"]
+body_path = "templates/replies/zh-CN/legacy_mail_5.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_10"
+summary = "6、当玩家提到购买了去广告服务但是仍然有广告，而且从Clickhouse中无法查询到用户的订单时"
+triggers = ["去广告", "广告", "订单"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_10.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_11"
+summary = "您好！"
+triggers = ["去广告", "广告", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_11.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_7"
+summary = "7、当玩家购买了商品，但是游戏存档异常重置时"
+triggers = ["当玩家购买了商品", "但是游戏存档异常重置时", "存档", "内购", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_mail_7.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_8"
+summary = "8、当客服已经操作完给玩家的退款时"
+triggers = ["当客服已经操作完给玩家的退款时", "退款", "订单"]
+body_path = "templates/replies/zh-CN/legacy_mail_8.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_f7f6e61996"
+summary = "当玩家提出内购相关的问题，但是查询用户数据没有找到任何购买记录时"
+triggers = ["当玩家提出内购相关的问题", "但是查询用户数据没有找到任何购买记录时", "内购"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_f7f6e61996.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_15"
+summary = "我们查看了您在游戏里的行为记录，目前看您当前的账号没有任何购买记录，请问您是否有更换设备、卸载重装等操作，这都会导致您的存档重新开始"
+triggers = ["存档"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_15.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_8878079dae"
+summary = "当玩家遇到广告问题时"
+triggers = ["当玩家遇到广告问题时", "广告"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_8878079dae.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_3a8fe6370f"
+summary = "当玩家提问游戏不支持切换横竖屏时"
+triggers = ["当玩家提问游戏不支持切换横竖屏时", "横竖屏"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_3a8fe6370f.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_18"
+summary = "13、当玩家提出游戏的崩溃卡死导致自己的道具损失，我们需要了解崩溃的时机时"
+triggers = ["卡死"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_18.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_19"
+summary = "非常感谢您的反馈，同时也向您致以最诚挚的道歉。得知游戏近期的卡死和闪退问题影响了您的减压时光并造成了道具损失，我们深感自责。"
+triggers = ["卡死", "闪退"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_19.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_20"
+summary = "由于我们的游戏目前是纯离线运行，为了能让技术团队更精准地定位并修复这个 Bug，能否请您协助提供以下信息："
+body_path = "templates/replies/zh-CN/legacy_mail_entry_20.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_21"
+summary = "发生的场景： 游戏崩溃通常发生在什么情况下？（例如：是在关卡加载时、点击某个特定道具时、还是在观看广告结束后？）"
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_21.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_22"
+summary = "具体的动作： 在闪退发生的那一刻，您正在进行什么操作？"
+triggers = ["闪退"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_22.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_52e3c65a3f"
+summary = "设备信息： 您的手机型号以及系统版本是多少？"
+triggers = ["设备信息：", "您的手机型号以及系统版本是多少？"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_52e3c65a3f.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_9f8aaf1284"
+summary = "当玩家提出一些合理的功能建议时"
+triggers = ["当玩家提出一些合理的功能建议时"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_9f8aaf1284.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_bug"
+summary = "当玩家遇到bug，且他的游戏版本不是最新版本时"
+triggers = ["当玩家遇到bug", "且他的游戏版本不是最新版本时"]
+body_path = "templates/replies/zh-CN/legacy_mail_bug.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_16"
+summary = "16、当玩家提出游戏缺少存档或者账号绑定功能时"
+triggers = ["16", "当玩家提出游戏缺少存档或者账号绑定功能时", "存档"]
+body_path = "templates/replies/zh-CN/legacy_mail_16.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_27"
+summary = "17、当玩家提到游戏的宣传广告说游戏内没有广告，但是下载游玩游戏后发现有广告时"
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_27.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_16_restore"
+summary = "16、当安卓系统的玩家提出去广告服务不能restore时"
+triggers = ["16", "去广告", "restore", "广告"]
+body_path = "templates/replies/zh-CN/legacy_mail_16_restore.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_17"
+summary = "17、当玩家询问如何删除账号数据时"
+triggers = ["17", "当玩家询问如何删除账号数据时", "存档", "删除账号"]
+body_path = "templates/replies/zh-CN/legacy_mail_17.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_18_quordle"
+summary = "18、当玩家询问quordle如何下载或者询问游戏的下载链接时"
+triggers = ["18", "quorde"]
+body_path = "templates/replies/zh-CN/legacy_mail_18_quordle.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_fd99c2bae1_31"
+summary = "再次对于给您带来的困扰深感抱歉"
+triggers = ["再次对于给您带来的困扰深感抱歉"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_fd99c2bae1_31.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_20"
+summary = "20、当玩家提出他异常失去了道具时"
+triggers = ["20", "当玩家提出他异常失去了道具时"]
+body_path = "templates/replies/zh-CN/legacy_mail_20.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_21"
+summary = "21、当玩家提出某个活动或者功能的奖励没有获得时"
+triggers = ["21", "当玩家提出某个活动或者功能的奖励没有获得时"]
+body_path = "templates/replies/zh-CN/legacy_mail_21.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_22_userid"
+summary = "22、当玩家的邮件中反馈了具体的问题，但是邮件中没有具体的userid时"
+triggers = ["22", "当玩家的邮件中反馈了具体的问题", "但是邮件中没有具体的userid时", "userid"]
+body_path = "templates/replies/zh-CN/legacy_mail_22_userid.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_23"
+summary = "23、当玩家提到充值未到账时，直接转人工处理。"
+triggers = ["23", "当玩家提到充值未到账时", "直接转人工处理。", "广告"]
+body_path = "templates/replies/zh-CN/legacy_mail_23.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_36"
+summary = "得知您在游戏时遇到广告相关的问题，我们深表歉意。我们理解这会对您的游戏体验造成干扰，让人十分沮丧。"
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_36.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_entry_37"
+summary = "应该是设备或者游戏的性能有问题，请问您的手机存储空间剩余是否还充足，如果不充足的话可以考虑删除一些其他不常用的app，如果您还想继续游玩我们的游戏的话，切记千万不可随意删除咱们的游戏然后重新安装，这会导致您的存档游戏进度重置为第一关"
+triggers = ["存档"]
+body_path = "templates/replies/zh-CN/legacy_mail_entry_37.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_mail_topic_9a7bd6ed5e"
+summary = "润色并翻译：您好！"
+triggers = ["润色并翻译：您好！", "广告", "rv", "断网"]
+body_path = "templates/replies/zh-CN/legacy_mail_topic_9a7bd6ed5e.md"
+priority = 45
+source_file = "反馈邮件.txt"
+
+[[templates]]
+id = "legacy_store_review_entry_1"
+summary = "我现在需要你帮我生成google play商店的评价回复内容，我后面会把玩家的评价贴到这里，你帮我生成回复内容，需要针对不同国家用户评价的语言生成对应评价的语言内容，生成最终结果之前要生成中文版本便于我查看，回复的内容要符合google商店"
+case_types = ["store_review"]
+body_path = "templates/replies/zh-CN/legacy_store_review_entry_1.md"
+priority = 45
+source_file = "商店评价.txt"
+
+[[templates]]
+id = "legacy_store_review_entry_2"
+summary = "你好，感谢您的反馈，对于您提出的游戏关卡体验问题，我们的产品部门已经在持续跟进，我们会持续优化我们的游戏，敬请期待"
+case_types = ["store_review"]
+body_path = "templates/replies/zh-CN/legacy_store_review_entry_2.md"
+priority = 45
+source_file = "商店评价.txt"
+
+[[templates]]
+id = "legacy_store_review_entry_3"
+summary = "感谢您的反馈，如果游戏中遇到了具体问题，您可以点击设置里的support或者直接发送邮件的方式联系我们，我们会积极为您解决"
+case_types = ["store_review"]
+body_path = "templates/replies/zh-CN/legacy_store_review_entry_3.md"
+priority = 45
+source_file = "商店评价.txt"
+
+[[templates]]
+id = "legacy_store_review_entry_4"
+summary = "感谢您的反馈，我们已经将您的意见反馈给产品部门，我们会关注用户反馈持续优化游戏，如何您有任何问题可以通过游戏内联系我们"
+case_types = ["store_review"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_store_review_entry_4.md"
+priority = 45
+source_file = "商店评价.txt"
+
+[[templates]]
+id = "legacy_store_review_entry_5"
+summary = "感谢您的反馈！也同时很高兴您能喜欢并下载我们的游戏"
+case_types = ["store_review"]
+body_path = "templates/replies/zh-CN/legacy_store_review_entry_5.md"
+priority = 45
+source_file = "商店评价.txt"
+
+[[templates]]
+id = "legacy_store_review_entry_6"
+summary = "你好，对于给您带来的不便，我们深表歉意。广告为游戏的免费版本提供支持，但我们致力于谨慎地平衡广告投放。请在游戏内联系我们，以便我们调查您的问题。"
+case_types = ["store_review"]
+triggers = ["广告"]
+body_path = "templates/replies/zh-CN/legacy_store_review_entry_6.md"
+priority = 45
+source_file = "商店评价.txt"
+
+[[templates]]
+id = "legacy_store_review_entry_7"
+summary = "您好！感谢您的反馈。因为是离线运行逻辑，存档无法自动随账号迁移。请您通过游戏内的“Support”按钮联系我们，并提供您的 UserID，以便我们协助您查看是否有其他补救办法。"
+case_types = ["store_review"]
+triggers = ["存档", "userid"]
+body_path = "templates/replies/zh-CN/legacy_store_review_entry_7.md"
+priority = 45
+source_file = "商店评价.txt"
+
+[[templates]]
+id = "legacy_store_review_entry_8"
+summary = "您好，您有任何问题的话，请在游戏内联系我们，以便我们调查您的问题。"
+case_types = ["store_review"]
+body_path = "templates/replies/zh-CN/legacy_store_review_entry_8.md"
+priority = 45
+source_file = "商店评价.txt"

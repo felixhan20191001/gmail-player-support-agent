@@ -1,0 +1,14 @@
+{
+  "id": "dummy-smoke-case",
+  "description": "Skeleton fixture proving the offline eval harness can compare fields without external services.",
+  "expected": {
+    "project": "Dummy",
+    "case_type": "general_question",
+    "action": "skipped"
+  },
+  "actual": {
+    "project": "Dummy",
+    "case_type": "general_question",
+    "action": "skipped"
+  }
+}

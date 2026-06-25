@@ -1,0 +1,208 @@
+[model]
+# Local llama-server is the default. Other supported backends:
+# backend = "ollama"
+# backend = "openai-compatible"
+backend = "llamaserver"
+gguf_path = "/Users/hanpengfei/models/Ministral-3-8B-Instruct-2512-Q4_K_M.gguf"
+base_url = "http://localhost:8080/v1"
+llamafile_mode = "prompt"
+timeout_seconds = 900
+budget_tokens = 8192
+max_iterations = 28
+
+# Cloud OpenAI-compatible example. Keep secrets in env vars or files.
+# backend = "openai-compatible"
+# model = "your-cloud-model"
+# base_url = "https://api.openai.com/v1"
+# api_key_env = "OPENAI_API_KEY"
+# api_key_file = "/path/to/model_api_key.txt"
+
+# Optional profiles shown as Web UI model-switch buttons. If omitted, the Web UI
+# creates one profile from [model], named "local" for local backends or "cloud"
+# for cloud backends.
+#
+# [model_profiles.local]
+# backend = "llamaserver"
+# gguf_path = "/Users/hanpengfei/models/Ministral-3-8B-Instruct-2512-Q4_K_M.gguf"
+# base_url = "http://localhost:8080/v1"
+# llamafile_mode = "prompt"
+# timeout_seconds = 900
+# budget_tokens = 8192
+# max_iterations = 28
+#
+# [model_profiles.cloud]
+# backend = "openai-compatible"
+# model = "your-cloud-model"
+# base_url = "https://api.openai.com/v1"
+# api_key_env = "OPENAI_API_KEY"
+# timeout_seconds = 900
+# budget_tokens = 8192
+# max_iterations = 28
+
+[gmail]
+# Use "me" or the actual Gmail address. The OAuth token must belong to this
+# account and have Gmail read/modify/compose permissions.
+user_id = "me"
+account_email = "support@example.com"
+# For quick tests, set GMAIL_ACCESS_TOKEN. For durable runs, set the refresh
+# token trio below instead.
+access_token_env = "GMAIL_ACCESS_TOKEN"
+client_id_env = "GOOGLE_CLIENT_ID"
+client_secret_env = "GOOGLE_CLIENT_SECRET"
+refresh_token_env = "GMAIL_REFRESH_TOKEN"
+# Primary tab only; skip Promotions, Social, and Updates categories.
+feedback_query = "is:unread in:inbox category:primary -in:spam -in:trash"
+# request_timeout_seconds = 45
+# max_request_retries = 4
+# retry_backoff_seconds = 2
+# Deprecated: unread mail is always reprocessed when Gmail still marks UNREAD.
+# reprocess_unread_terminal = true
+# If Google APIs are unreachable, set HTTPS_PROXY/ALL_PROXY in the shell before startup.
+# Optional. Leave empty to derive project parents from existing Gmail user labels.
+project_label_names = ["NumberCrush", "BlackHole", "BusFever"]
+skip_non_project_candidates = true
+non_project_sender_patterns = [
+  "email.anthropic.com",
+  "notice@email.anthropic.com",
+]
+allow_existing_project_labels = true
+scan_child_project_labels = true
+allowed_label_names = [
+  "无内容",
+  "PlayerFeedback",
+  "AI/Processed",
+  "AI/Drafted",
+  "AI/NeedsHuman",
+  "Bug",
+  "Payment",
+  "LostItem",
+]
+processed_label_name = "AI/Processed"
+drafted_label_name = "AI/Drafted"
+needs_human_label_name = "AI/NeedsHuman"
+
+[clickhouse]
+url = "http://localhost:8123"
+database = "game_logs"
+username = "readonly_user"
+password_env = "CLICKHOUSE_PASSWORD"
+max_rows = 200
+max_time_window_hours = 168
+require_project_for_queries = true
+
+[clickhouse.allowed_schema.player_events]
+columns = ["event_time", "player_id", "server_id", "event_name", "item_id", "delta", "reason"]
+player_id_columns = ["player_id"]
+time_column = "event_time"
+
+[clickhouse.allowed_schema.payments]
+columns = ["event_time", "player_id", "server_id", "order_id", "amount", "status"]
+player_id_columns = ["player_id"]
+time_column = "event_time"
+
+[clickhouse.case_type_tables]
+lost_item = ["player_events"]
+payment = ["payments"]
+bug = ["player_events"]
+
+[clickhouse.project_case_type_tables.NumberCrush]
+payment = ["payments"]
+bug = ["player_events"]
+lost_item = ["player_events"]
+
+[clickhouse.project_case_type_tables.BlackHole]
+payment = ["payments"]
+bug = ["player_events"]
+lost_item = ["player_events"]
+
+[clickhouse.project_case_type_tables.BusFever]
+"*" = ["busfever", "carmania"]
+
+[clickhouse.project_platform_tables.BusFever]
+ios = ["carmania"]
+android = ["busfever"]
+
+# Optional structured evidence recipes. Leave empty until event semantics are
+# confirmed for a project. Recipes generate validator-checked SELECT queries.
+#
+# [[clickhouse.evidence_recipes]]
+# id = "purchase_success"
+# projects = ["NumberCrush"]
+# case_types = ["payment"]
+# table = "payments"
+# select_columns = ["event_time", "player_id", "order_id", "status"]
+# event_names = ["PaySuccess"]
+# product_id_contains = ["pass"]
+# limit = 100
+
+[notify]
+mode = "file"
+output_dir = "var/handoffs"
+# mode = "webhook"
+# webhook_url = "https://example.com/support-webhook"
+# webhook_token_env = "SUPPORT_WEBHOOK_TOKEN"
+# mode = "feishu"
+# feishu_webhook_url = "https://open.feishu.cn/open-apis/bot/v2/hook/..."
+# mode = "smtp"
+# smtp_host = "smtp.example.com"
+# smtp_port = 587
+# smtp_username_env = "SUPPORT_SMTP_USERNAME"
+# smtp_password_env = "SUPPORT_SMTP_PASSWORD"
+# smtp_from = "support-agent@example.com"
+# human_support_email = "human-support@example.com"
+
+[policy]
+high_risk_case_types = ["ban_appeal", "chargeback", "refund", "payment", "account_security", "compensation"]
+auto_draft_confidence_threshold = 0.85
+human_review_confidence_threshold = 0.60
+default_language = "zh-CN"
+
+[policy.label_by_case_type]
+no_content = ["无内容"]
+lost_item = ["LostItem"]
+payment = ["Payment"]
+bug = ["Bug"]
+
+[policy.label_suffix_by_case_type]
+ad_promo_mismatch = ["广告问题", "广告"]
+ad_issue = ["广告问题", "广告"]
+bug = ["bug反馈"]
+crash_or_freeze = ["崩溃卡死"]
+lost_save = ["存档丢失", "更新后存档丢失"]
+save_transfer = ["存档转移"]
+gameplay_misunderstanding = ["玩法误解", "咨询玩法"]
+feature_request = ["功能建议"]
+general_question = ["咨询", "咨询其他", "咨询玩法"]
+account_binding = ["账号绑定"]
+payment = ["内购问题", "内购"]
+ads_after_purchase = ["去广告后有广告"]
+pass_purchase_misunderstanding = ["pass购买误解"]
+other = ["其他"]
+
+[knowledge]
+rules_path = "knowledge/generic_support_rules.toml"
+templates_dir = "templates/replies"
+legacy_templates_path = "knowledge/legacy_reply_templates.toml"
+remove_ads_investigation_path = "knowledge/remove_ads_investigation.toml"
+coin_frenzy_investigation_path = "knowledge/coin_frenzy_investigation.toml"
+# Or use a directory with one <project>.toml file per project.
+# project_profiles_dir = "knowledge/profiles"
+max_rules = 8
+
+[knowledge.project_rules_paths]
+NumberCrush = "knowledge/numbercrush_support_rules.toml"
+# BlackHole = "knowledge/projects/blackhole_support_rules.toml"
+
+[knowledge.project_templates_dirs]
+NumberCrush = "templates/projects/NumberCrush"
+BlackHole = "templates/projects/BlackHole"
+BusFever = "templates/projects/BusFever"
+"Grill Master" = "templates/projects/Grill Master"
+
+[knowledge.project_profiles_paths]
+# NumberCrush = "knowledge/profiles/numbercrush.toml"
+
+[state]
+state_path = "var/cases.json"
+audit_log_path = "var/audit.jsonl"
+processed_store_path = "var/processed_messages.json"

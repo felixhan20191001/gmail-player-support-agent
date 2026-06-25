@@ -1,0 +1,81 @@
+[[rules]]
+id = "payment_pass_not_instant_delivery"
+projects = ["NumberCrush"]
+case_types = ["payment"]
+triggers = [
+  "购买没到账",
+  "买了没到账",
+  "没收到",
+  "未到账",
+  "pass",
+  "Pass",
+  "通行证",
+]
+priority = 100
+summary = "Pass purchases unlock staged rewards instead of delivering all rewards immediately."
+requires_logs = true
+required_evidence = ["product_id", "purchase_event"]
+condition = "If the purchase product_id or product name indicates a pass, explain staged pass rewards instead of treating it as missing instant delivery."
+action = "draft_reply"
+human_review = false
+reply_template = "payment_pass_explanation"
+instructions = [
+  "First verify the user purchased a pass-like product from payment or purchase logs.",
+  "If evidence supports a pass purchase and no other payment anomaly appears, explain that pass rewards unlock by progress/stage.",
+  "If purchase evidence is missing, contradictory, or product_id is not pass-like, hand off to human support.",
+]
+
+[rules.log_query]
+table = "numbercrush"
+time_column = "log_time"
+player_column = "user_id"
+columns = ["log_time", "user_id", "event_name", "product_id", "price"]
+event_names = ["Purchase", "PaySuccess", "BuyProduct"]
+product_id_contains = ["pass"]
+max_hours = 168
+limit = 100
+
+[[rules]]
+id = "ads_after_purchase_rewarded_ads_still_exist"
+projects = ["NumberCrush"]
+case_types = ["ads_after_purchase"]
+triggers = [
+  "去广告后还有广告",
+  "买了去广告",
+  "仍然有广告",
+  "rewarded ad",
+  "激励视频",
+]
+priority = 80
+summary = "Ad-removal purchases usually remove forced/interstitial ads, while optional rewarded ads can still appear when players choose extra rewards."
+requires_logs = true
+required_evidence = ["product_id", "ad_event"]
+condition = "If logs show an ad-removal product and the reported ads are optional rewarded ads, explain the difference between forced ads and optional reward ads."
+action = "draft_reply"
+human_review = false
+reply_template = "ads_after_purchase_explanation"
+instructions = [
+  "Check purchase evidence before promising ad-removal behavior.",
+  "If logs indicate optional rewarded ads, explain they are user-triggered reward opportunities.",
+  "If logs indicate forced ads after purchase or evidence is unclear, hand off to human support.",
+]
+
+[rules.log_query]
+table = "numbercrush"
+time_column = "log_time"
+player_column = "user_id"
+columns = ["log_time", "user_id", "event_name", "product_id", "activity_kind", "reward_mode"]
+event_names = [
+  "PurchaseSuccess",
+  "PurchaseClick",
+  "Purchase",
+  "PaySuccess",
+  "BuyProduct",
+  "AdShow_Inter",
+  "AdShow",
+  "AdShow_Rv",
+  "AdReward",
+]
+product_id_contains = ["removead", "remove_ads", "no_ads", "noads", "ad"]
+max_hours = 168
+limit = 100

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Copy to web-ui.config.local.sh and fill in your values:
+#   cp scripts/web-ui.config.local.sh.example scripts/web-ui.config.local.sh
+#
+# web-ui.config.local.sh is gitignored. Do not commit real API keys.
+
+# --- Cloud model ---
+CLOUD_API_KEY="your-openai-compatible-api-key"
+# DeepSeek example (thinking mode is supported for tool-call workflows):
+# CLOUD_MODEL="deepseek-v4-flash"
+# CLOUD_BASE_URL="https://api.deepseek.com"
+CLOUD_MODEL="gpt-4o-mini"
+CLOUD_BASE_URL="https://api.openai.com/v1"
+
+# --- Local model (llama-server) ---
+LLAMA_SERVER_BIN="/opt/homebrew/bin/llama-server"
+GGUF_PATH="/Users/hanpengfei/models/Ministral-3-8B-Instruct-2512-Q4_K_M.gguf"
+LLAMA_HOST="127.0.0.1"
+LLAMA_PORT="8080"
+LLAMA_NGL="999"
+
+# --- Web UI ---
+WEB_HOST="127.0.0.1"
+WEB_PORT="8090"
+CONFIG_PATH="config/config.local.toml"

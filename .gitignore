@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+config/config.local.toml
+config/.env.local
+scripts/web-ui.config.local.sh
+var/

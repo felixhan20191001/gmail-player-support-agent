@@ -1,0 +1,720 @@
+[[rules]]
+id = "never_ask_server_or_character_name"
+always_include = true
+priority = 99
+summary = "Games have no multi-server support workflow; never ask players for server ID or in-game character name."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+instructions = [
+  "Our games are not multi-server MMOs. Support does not use server ID or character name to investigate issues.",
+  "Never ask for server ID, server, 区服, character name, 角色名, nickname, or in-game name in player-facing drafts.",
+  "When userid or user id is present in the email, treat identity as sufficient for log lookup.",
+  "If userid is missing, ask only for user id through the in-game support flow or email metadata, not server or character name.",
+]
+
+[[rules]]
+id = "empty_feedback_apply_no_content_label"
+case_types = ["no_content"]
+always_include = true
+priority = 100
+summary = "Email has no substantive player feedback; apply the existing 无内容 label and skip reply."
+requires_logs = false
+action = "apply_label_only"
+human_review = false
+instructions = [
+  "The model must classify this in extract_feedback_claim as no_content; tools do not auto-detect empty feedback.",
+  "Use when the email body contains only form metadata such as platform, version, and userid, and the player's actual question field is empty or whitespace.",
+  "Use when 'My question is:' or equivalent form fields have no meaningful text after them.",
+  "Use when the subject and body have no valid player feedback, or only random/gibberish characters without a describable issue.",
+  "Do not use when the player describes any concrete issue, request, complaint, or question, even briefly.",
+  "Apply only the configured global label 无内容. Do not create a Gmail draft or human handoff.",
+  "After applying 无内容, call mark_gmail_messages_read for the same message_ids.",
+  "Save case state as skipped.",
+]
+
+[[rules]]
+id = "uninstall_no_save_refund_suggestion"
+case_types = ["lost_save", "payment"]
+triggers = ["删除游戏", "卸载", "重新安装", "重装", "存档丢失", "购买记录", "VIP"]
+priority = 70
+summary = "If uninstall/reinstall caused local save and purchase state loss, explain no save restore and ask for order details for refund handling."
+requires_logs = false
+action = "draft_reply"
+human_review = true
+reply_template = "uninstall_no_save_refund_suggestion"
+instructions = [
+  "Use when the player says progress or purchase state was lost after deleting or reinstalling the game.",
+  "Do not promise restoration or compensation.",
+  "Ask for order details when payment handling is needed.",
+]
+
+[[rules]]
+id = "coin_spend_revive_normal"
+case_types = ["gameplay_misunderstanding", "other"]
+triggers = ["金币", "消耗", "消耗异常", "变快", "复活", "coin", "coins", "revive"]
+priority = 60
+summary = "Coin spending appears mainly from revives or normal actions; explain and invite specific evidence if the player disagrees."
+requires_logs = true
+required_evidence = ["coin_spend_events"]
+action = "draft_reply"
+human_review = false
+reply_template = "coin_spend_revive_normal"
+instructions = [
+  "Use only when logs support normal coin spending, especially revive usage.",
+  "If logs are missing or contradictory, do not claim the spend is normal.",
+]
+
+[[rules]]
+id = "no_purchase_record_reinstall_check"
+case_types = ["payment", "lost_save"]
+triggers = ["购买未到账", "没到账", "没有购买记录", "查不到订单", "存档丢失", "更换设备", "卸载重装", "missing purchase"]
+priority = 75
+summary = "No purchase record is visible for the current account; ask whether the player reinstalled or changed device and request order number."
+requires_logs = true
+required_evidence = ["no_purchase_record"]
+action = "draft_reply"
+human_review = true
+reply_template = "no_purchase_record_reinstall_check"
+instructions = [
+  "Use when current user data has no purchase evidence.",
+  "Request the payment order number if the player says payment succeeded.",
+]
+
+[[rules]]
+id = "blank_page_screenshot_request"
+case_types = ["bug", "payment", "other"]
+triggers = [
+  "blank space",
+  "blank page",
+  "blank screen",
+  "empty space",
+  "gray square",
+  "grey square",
+  "white screen",
+  "black screen",
+  "空白",
+  "白屏",
+  "空白格",
+  "显示空白",
+  "页面空白",
+  "一片空白",
+]
+priority = 92
+summary = "Blank or empty in-game page/UI; use bug case type, apply bug反馈 label, and ask for screenshot."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "blank_page_screenshot_request"
+instructions = [
+  "The model must classify case_type=bug when the core complaint is a blank/empty UI area, even if the player mentions having paid.",
+  "Do not use case_type=payment or project/内购问题 unless the player explicitly says the purchase/charge did not arrive (未到账 / not received).",
+  "Apply project/bug反馈 from extract_feedback_claim.recommended_labels.",
+  "Ask for a screenshot or screen recording of the blank area, plus the activity/level name and steps to reproduce.",
+]
+
+[[rules]]
+id = "lag_details_request"
+case_types = ["crash_or_freeze", "bug"]
+triggers = ["卡顿", "卡住", "很卡", "掉帧", "lag", "freeze", "stutter"]
+priority = 55
+summary = "The player reports lag but did not provide enough scene details; ask for screenshot/video, level, module, and steps."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "lag_details_request"
+instructions = [
+  "Use when the player reports lag, stutter, or freeze without enough details.",
+]
+
+[[rules]]
+id = "vague_issue_details_request"
+case_types = ["bug", "other", "general_question", "gameplay_misunderstanding"]
+triggers = ["有问题", "不能玩", "出错", "异常", "问题", "bug", "error", "problem", "help", "need help"]
+priority = 20
+summary = "The player reports a problem but the exact issue is unclear; ask for screenshots, steps, and location."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "vague_issue_details_request"
+instructions = [
+  "Use only when no more specific rule matches.",
+  "Ask for concrete reproduction details rather than guessing.",
+]
+
+[[rules]]
+id = "coin_frenzy_activity_log_investigation"
+case_types = ["pass_purchase_misunderstanding", "gameplay_misunderstanding", "payment"]
+require_trigger_match = true
+triggers = [
+  "coin frenzy",
+  "coin.frenzy",
+  "frenzy",
+  "beginning pack",
+  "level requirement",
+  "completing the level",
+  "level up",
+  "level ups",
+  "receiving credit",
+  "not receiving credit",
+  "time restraint",
+  "eat everything",
+  "haven't received my rewards",
+  "didn't get my credit",
+  "treasure tide",
+  "starlight pass",
+  "starlight",
+  "bought .*pass",
+  "pass and did not receive",
+  "pass.*not received",
+]
+priority = 87
+summary = "Investigate pass / activity purchases (starlight pass, coin frenzy etc.); explain task-based reward claiming after purchase."
+requires_logs = true
+required_evidence = ["product_id", "purchase_event"]
+action = "draft_reply"
+human_review = false
+reply_template = "coin_frenzy_task_reward_explanation"
+instructions = [
+  "The model must classify activity/task-reward purchase confusion in extract_feedback_claim; **strongly prefer pass_purchase_misunderstanding** (do not use plain 'payment') when the player bought a pass (starlight pass etc.) but expects instant rewards.",
+  "Call get_coin_frenzy_investigation_playbook, then query_clickhouse for purchase records with model-generated SELECT looking for pass-like product_id.",
+  "Call assess_coin_frenzy_log_evidence with structured findings before drafting.",
+  "If logs show successful purchase with pass-like product_id (contains pass/starlight/coin.frenzy etc), use the pass reward explanation (purchase activates eligibility; player must complete tasks/levels and manually claim; adapt template to actual details and language).",
+  "If no successful pass-like purchase found, ask for valid iOS or Google order details.",
+  "After assess_coin_frenzy_log_evidence + assess_claim_credibility, immediately call decide_support_action. Do not re-read or re-extract.",
+  "Do not treat confirmed pass purchases as high-risk payment handoff.",
+  "Never claim purchase records were checked unless query_clickhouse returned evidence.",
+]
+
+[rules.log_query]
+table = "<project_table>"
+time_column = "log_time"
+player_column = "user_id"
+columns = ["log_time", "user_id", "event_name", "product_id", "price"]
+event_names = ["PurchaseSuccess", "PurchaseClick", "PaySuccess", "Purchase", "BuyProduct"]
+product_id_contains = ["coin.frenzy", "coin_frenzy", "coinfrenzy", "pass", "starlight"]
+max_hours = 168
+limit = 100
+
+[[rules]]
+id = "ads_after_purchase_log_investigation"
+case_types = ["ads_after_purchase"]
+triggers = [
+  "去广告后还有广告",
+  "买了去广告",
+  "购买去广告",
+  "仍然有广告",
+  "still see ads",
+  "remove ads",
+  "no ads after purchase",
+  "ad removal",
+  "去广告",
+]
+priority = 85
+summary = "Investigate remove-ads purchase and interstitial ad logs before explaining RV vs forced ads."
+requires_logs = true
+required_evidence = ["product_id", "purchase_event", "ad_event"]
+condition = "Player reports ads after buying remove-ads; query purchase and AdShow_Inter logs, then branch by timeline."
+action = "draft_reply"
+human_review = false
+reply_template = "ads_after_purchase_rv_only_explanation"
+instructions = [
+  "The model must classify ads_after_purchase in extract_feedback_claim; tools do not auto-detect remove-ads purchase complaints.",
+  "Call get_remove_ads_investigation_playbook first.",
+  "Query purchase records, then interstitial AdShow_Inter records with model-generated SELECT via query_clickhouse.",
+  "Call assess_remove_ads_log_evidence with structured findings before drafting.",
+  "Use ads_after_purchase_rv_only_explanation only when logs show remove-ads purchase and no interstitial after purchase.",
+  "Use remove_ads_no_order_request_order_id when no successful remove-ads purchase is found.",
+  "Hand off when forced interstitials still appear after purchase.",
+  "Never claim logs were checked unless query_clickhouse returned evidence.",
+]
+
+[rules.log_query]
+table = "<project_table>"
+time_column = "log_time"
+player_column = "user_id"
+columns = ["log_time", "user_id", "event_name", "product_id", "price", "pos"]
+event_names = ["PurchaseSuccess", "PurchaseClick", "PaySuccess", "Purchase", "BuyProduct", "AdShow_Inter", "AdShow_Rv", "AdReward"]
+product_id_contains = ["removead", "remove_ads", "no_ads", "noads"]
+max_hours = 168
+limit = 100
+
+[[rules]]
+id = "remove_ads_no_order_request_order_id"
+case_types = ["ads_after_purchase", "payment"]
+triggers = ["去广告", "仍然有广告", "没有订单", "查不到订单", "扣款", "remove ads", "no ads", "ad removal"]
+priority = 80
+summary = "The player reports ad-removal purchase but no successful order is found; request order number or payment screenshot."
+requires_logs = true
+required_evidence = ["no_successful_purchase_record"]
+action = "draft_reply"
+human_review = true
+reply_template = "remove_ads_no_order_request_order_id"
+instructions = [
+  "Use when purchase-button interaction may exist but no successful order is visible.",
+  "Do not promise service activation or refund until order evidence is received.",
+]
+
+[[rules]]
+id = "purchase_save_reset_refund_confirm"
+case_types = ["payment", "lost_save"]
+triggers = ["存档重置", "购买丢失", "重置", "退款", "订单", "save reset", "purchase lost"]
+priority = 72
+summary = "Purchase content may be unavailable because the local save reset; explain no restore and ask whether refund assistance is needed."
+requires_logs = false
+action = "draft_reply"
+human_review = true
+reply_template = "purchase_save_reset_refund_confirm"
+instructions = [
+  "Use for purchase plus local save reset cases.",
+  "Ask the player to confirm refund handling and provide order details.",
+]
+
+[[rules]]
+id = "refund_processed_notice"
+case_types = ["payment"]
+triggers = ["退款完成", "已经退款", "退款处理", "refund completed", "refund processed"]
+priority = 50
+summary = "Notify that refund handling is being or has been processed and ask the player to watch for platform notification."
+requires_logs = false
+action = "draft_reply"
+human_review = true
+reply_template = "refund_processed_notice"
+instructions = [
+  "Use only when an operator or tool evidence says refund processing is complete or underway.",
+  "Do not invent refund status.",
+]
+
+[[rules]]
+id = "ad_redirect_reset_ad_id"
+case_types = ["ad_issue"]
+triggers = [
+  "跳转",
+  "打开网页",
+  "打开页面",
+  "自动打开",
+  "跳转到",
+  "migrates",
+  "migrate",
+  "redirect",
+  "redirects",
+  "redirected",
+  "opens page",
+  "opening page",
+  "separate pages",
+  "external",
+  "browser",
+  "shein",
+  "annoying",
+  "干扰",
+  "打扰",
+  "弹窗",
+  "恶意广告",
+  "广告跳转",
+]
+priority = 62
+summary = "Ads redirect or open external pages and disturb gameplay; guide iOS/Android ad ID reset instead of storage cleanup."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "ad_redirect_reset_ad_id"
+instructions = [
+  "The model must classify ad_issue in extract_feedback_claim and match this rule; tools do not auto-detect redirect ad complaints.",
+  "Use when ads redirect to external sites/apps or open many pages, without game crash or freeze.",
+  "Provide iOS and Android reset advertising ID steps. Do not suggest clearing phone storage as the main fix.",
+  "Do not use ad_loading_playback_troubleshooting for redirect-only complaints.",
+  "Never query ClickHouse for ad_issue cases.",
+]
+
+[[rules]]
+id = "ad_issue_screenshot_request"
+case_types = ["ad_issue"]
+triggers = [
+  "广告问题",
+  "广告截图",
+  "广告商",
+  "广告内容",
+  "广告",
+  "ad issue",
+  "bad ad",
+  "ads freeze",
+  "ads freezing",
+  "adds freeze",
+  "adds freezing",
+  "freezing",
+  "freeze",
+  "stuck",
+]
+priority = 55
+summary = "Ask for ad screenshot or ad source details so the team can report or block problematic ads."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "ad_issue_screenshot_request"
+instructions = [
+  "Use for problematic ad content, misleading ad, or ad source complaints.",
+  "Never query ClickHouse for ad_issue cases.",
+]
+
+[[rules]]
+id = "orientation_not_supported"
+case_types = ["feature_request", "general_question"]
+triggers = ["横屏", "竖屏", "横竖屏", "旋转", "portrait", "landscape", "orientation"]
+priority = 45
+summary = "The game does not currently support switching between portrait and landscape orientation."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "orientation_not_supported"
+instructions = [
+  "Acknowledge the request and say it has been forwarded to product/R&D.",
+]
+
+[[rules]]
+id = "crash_coin_loss_no_compensation"
+case_types = ["crash_or_freeze", "bug", "payment", "other"]
+require_trigger_match = true
+triggers = [
+  "kicked out",
+  "kick out",
+  "got kicked",
+  "continue playing",
+  "paid coins",
+  "pay coins",
+  "spent coins",
+  "lose coins",
+  "lost coins",
+  "花金币",
+  "消耗金币",
+  "续关",
+  "复活",
+  "闪退",
+  "卡死",
+  "崩溃",
+  "退出游戏",
+]
+priority = 88
+summary = "Player spent coins to continue or revive but the app crashed or kicked them out; apologize, ask whether crashes are frequent, and state no item/coin compensation capability."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "crash_coin_loss_no_compensation"
+instructions = [
+  "Use when the player says they spent or paid coins to continue a level, revive, or similar in-game action and then the app crashed, froze, or was kicked out.",
+  "Prefer case_type crash_or_freeze instead of payment when the core complaint is crash-related coin loss.",
+  "Never ask for server ID or character name. userid or user id in the email is sufficient.",
+  "Apologize, ask whether crashes or sudden exits happen frequently, and clearly state that item or coin compensation or restoration is not currently available.",
+  "Do not promise compensation, refund, coin restoration, or account investigation for compensation.",
+]
+
+[[rules]]
+id = "crash_item_loss_details_request"
+case_types = ["crash_or_freeze", "bug"]
+triggers = ["崩溃", "闪退", "卡死", "道具损失", "丢失道具", "crash", "lost item"]
+priority = 65
+summary = "Crash or freeze may have caused item loss; ask for crash timing, scene, action, device, and system version."
+requires_logs = false
+action = "draft_reply"
+human_review = true
+reply_template = "crash_item_loss_details_request"
+instructions = [
+  "Do not promise item compensation.",
+  "Ask for technical reproduction details and explain the limitation carefully.",
+]
+
+[[rules]]
+id = "feature_request_ack"
+case_types = ["feature_request", "gameplay_misunderstanding"]
+triggers = [
+  "建议",
+  "希望",
+  "能不能",
+  "功能",
+  "优化",
+  "feature",
+  "suggestion",
+  "please add",
+  "timer",
+  "ease up",
+  "too hard",
+  "too strict",
+  "relax",
+  "more time",
+]
+priority = 45
+summary = "Acknowledge a reasonable feature request and say it has been shared with product/R&D."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "feature_request_ack"
+instructions = [
+  "Do not promise a release date.",
+]
+
+[[rules]]
+id = "update_latest_version_request"
+case_types = ["bug", "crash_or_freeze"]
+triggers = ["旧版本", "不是最新", "更新", "版本", "update", "latest version", "old version"]
+priority = 50
+summary = "If the player is not on the latest version, ask them to update and retry, then provide screenshots if the issue remains."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "update_latest_version_request"
+instructions = [
+  "Use when app version evidence or player text indicates they are not on the latest version.",
+]
+
+[[rules]]
+id = "cloud_save_in_development"
+case_types = ["account_binding", "save_transfer", "feature_request"]
+triggers = ["云存档", "账号绑定", "保存进度", "同步", "换设备", "cloud save", "account binding", "sync progress"]
+priority = 60
+summary = "Cloud save or account binding is not currently available and is being planned or developed."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "cloud_save_in_development"
+instructions = [
+  "Do not promise an exact release date.",
+]
+
+[[rules]]
+id = "ad_promo_mismatch_label_only"
+case_types = ["ad_promo_mismatch"]
+triggers = [
+  "宣传",
+  "广告说没有广告",
+  "下载后有广告",
+  "misleading ad",
+  "misleading",
+  "promised no ads",
+  "supposed to get",
+  "days off",
+  "day off",
+  "off of ads",
+  "no ads in the ad",
+  "advertised no ads",
+  "what gives",
+  "new to the game",
+  "just started",
+  "started today",
+  "many ads all the time",
+  "说没有广告",
+  "宣传无广告",
+  "欺骗",
+]
+priority = 90
+summary = "Promo/marketing implied no ads or ad-free trial, but the game still shows ads; label only, no reply."
+requires_logs = false
+action = "apply_label_only"
+human_review = false
+instructions = [
+  "The model must classify this in extract_feedback_claim as ad_promo_mismatch; tools do not auto-detect promo ad complaints.",
+  "Use when marketing or store ads promised no ads or an ad-free period (e.g. 2 days off ads), not an in-app remove-ads purchase.",
+  "Do not use for ads_after_purchase (player paid for remove-ads) or technical ad bugs (freeze, redirect, missing reward).",
+  "Apply project parent label and project/广告问题 from extract_feedback_claim.recommended_labels.",
+  "Do not create a Gmail draft or human handoff.",
+  "After apply_existing_gmail_labels, call mark_gmail_messages_read for the same message_ids.",
+  "Save case state as skipped.",
+]
+
+[[rules]]
+id = "android_restore_not_supported"
+case_types = ["payment", "general_question"]
+triggers = ["restore", "恢复购买", "安卓", "Android", "购买恢复"]
+priority = 55
+summary = "Android version does not currently support restore purchase; ask for order details for concrete purchase issues."
+requires_logs = false
+action = "draft_reply"
+human_review = true
+reply_template = "android_restore_not_supported"
+instructions = [
+  "Use only for Android restore-purchase questions.",
+]
+
+[[rules]]
+id = "delete_account_data_no_account"
+case_types = ["account_binding", "general_question"]
+triggers = ["删除账号", "删除数据", "账号数据", "重玩", "delete account", "delete data", "restart game"]
+priority = 50
+summary = "There is no cloud account system; data is local and can be reset by reinstalling or clearing app data, with save-loss warning."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "delete_account_data_no_account"
+instructions = [
+  "Warn clearly that local save progress may be reset.",
+]
+
+[[rules]]
+id = "quorde_download_links"
+projects = ["Quorde"]
+case_types = ["general_question"]
+triggers = ["下载", "下载链接", "Google Play", "apkpure", "quorde", "quordle", "download link"]
+priority = 70
+summary = "Provide Quorde Google Play and APKPure download links."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "quorde_download_links"
+instructions = [
+  "Use only for Quorde download questions.",
+]
+
+[[rules]]
+id = "bug_direct_handoff"
+case_types = ["bug"]
+triggers = ["严重bug", "bug", "无法继续", "不能继续", "broken"]
+priority = 30
+summary = "Concrete bug reports with enough details should be handed to human support or technical review."
+requires_logs = false
+action = "handoff_human"
+human_review = true
+instructions = [
+  "If the player provides a concrete bug report with details, prefer human handoff instead of generic drafting.",
+]
+
+[[rules]]
+id = "lost_item_clarify"
+case_types = ["bug", "other"]
+triggers = ["道具丢失", "失去道具", "限时道具", "item lost", "lost item", "booster"]
+priority = 55
+summary = "Ask which item was lost and explain timed items may expire."
+requires_logs = false
+action = "draft_reply"
+human_review = true
+reply_template = "lost_item_clarify"
+instructions = [
+  "Do not promise item compensation.",
+]
+
+[[rules]]
+id = "missing_reward_details_request"
+case_types = ["bug", "other"]
+triggers = ["奖励没收到", "没有获得奖励", "活动奖励", "关卡奖励", "missing reward", "reward not received"]
+priority = 58
+summary = "Ask for the specific level, activity, reward, screenshot, time, and user ID."
+requires_logs = false
+action = "draft_reply"
+human_review = true
+reply_template = "missing_reward_details_request"
+instructions = [
+  "Use when the player says an activity, level, or feature reward was not received.",
+]
+
+[[rules]]
+id = "missing_userid_request"
+case_types = ["bug", "payment", "ad_issue", "lost_save", "other"]
+triggers = ["userid", "user id", "用户ID", "用户 id", "没有id", "缺少id"]
+priority = 65
+summary = "The email lacks user ID needed for lookup; ask the player to contact through the in-game support button."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "missing_userid_request"
+instructions = [
+  "Use when the case needs lookup but the email lacks a usable user ID.",
+]
+
+[[rules]]
+id = "payment_issue_handoff"
+case_types = ["payment"]
+triggers = [
+  "充值未到账",
+  "内购未到账",
+  "购买未到账",
+  "未到账",
+  "没到",
+  "没收到",
+  "扣款",
+  "payment missing",
+  "not received",
+  "didn't receive",
+  "did not receive",
+  "never received",
+  "never got",
+  "no purchase",
+]
+priority = 85
+summary = "Explicit payment-not-received cases should be handed off to human support unless a specific safe template rule is clearly supported by evidence."
+requires_logs = true
+required_evidence = ["purchase_event", "order_id"]
+action = "handoff_human"
+human_review = true
+require_trigger_match = true
+instructions = [
+  "Use only when the player explicitly says a charge/purchase did not arrive or was not credited.",
+  "Do not use for paid-but-UI-bug complaints (blank page, empty slot, cannot access reward after paying). Use blank_page_screenshot_request with case_type=bug instead.",
+  "Do not use for Coin Frenzy / coin.frenzy activity purchases where rewards require completing tasks. Use coin_frenzy_activity_log_investigation with pass_purchase_misunderstanding instead.",
+  "Payment cases are high risk.",
+  "If order or purchase evidence is unclear, create a human handoff instead of drafting a definitive answer.",
+]
+
+[[rules]]
+id = "ad_loading_playback_troubleshooting"
+case_types = ["ad_issue"]
+triggers = [
+  "广告加载",
+  "广告播放",
+  "广告卡住",
+  "关闭广告",
+  "无法关闭",
+  "卡死",
+  "看完广告",
+  "没有奖励",
+  "奖励",
+  "网络",
+  "存储空间",
+  "ad loading",
+  "ad playback",
+  "ads freeze",
+  "ads freezing",
+  "adds freeze",
+  "adds freezing",
+  "freezing",
+  "freeze",
+  "stuck",
+  "can't close",
+  "cannot close",
+  "no reward",
+  "reward",
+  "watch ad",
+  "watched ad",
+  "shutting down",
+  "shuts down",
+  "shut down",
+  "wipes out",
+  "wipe out",
+  "progress",
+  "ad comes up",
+  "every time an ad",
+  "crash",
+  "crashes",
+]
+priority = 58
+summary = "Explain ad loading/playback may relate to ad content, network, device performance, or storage; warn not to reinstall casually."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "ad_loading_playback_troubleshooting"
+instructions = [
+  "The model must classify ad_issue in extract_feedback_claim and match this rule; tools do not auto-detect ad freeze or reward issues.",
+  "Use for ad loading, playback, freeze, close-button, or missing-reward-after-ad issues.",
+  "Do not use for ads that only redirect to external pages/apps without crash or freeze; use ad_redirect_reset_ad_id instead.",
+  "Never query ClickHouse for ad_issue cases.",
+]
+
+[[rules]]
+id = "offline_play_explanation"
+case_types = ["general_question", "gameplay_misunderstanding"]
+triggers = ["断网", "离线", "没有网络", "offline", "without internet", "no network"]
+priority = 55
+summary = "The game can be played offline, but rewarded ads need network connectivity."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "offline_play_explanation"
+instructions = [
+  "Mention that rewarded video ads require network access.",
+]
