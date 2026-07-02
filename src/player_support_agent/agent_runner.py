@@ -116,11 +116,11 @@ def support_retry_nudge(raw_response: str) -> str:
         "and get_existing_gmail_labels, the next usual tool is "
         "extract_feedback_claim. Then call get_relevant_support_rules (once), "
         "resolve_player_identity (MANDATORY, pass player_id; prerequisite for assess), "
-        "assess_claim_credibility, decide_support_action, "
-        "create_gmail_draft or create_human_handoff_summary, save_case_state, "
+        "assess_claim_credibility, then **immediately** decide_support_action (this is the most common place models get stuck — after assess you must call decide next with case_type + verdict/confidence/risk_level from assess + rule info from get_relevant_support_rules), "
+        "create_gmail_draft or create_human_handoff_summary, apply_existing_gmail_labels, mark_gmail_messages_read, save_case_state, "
         "and finally respond. If information is missing, still call the decision "
         "and state tools with the missing fields instead of writing prose. "
-        "Never restart read/extract/rules loops once past get_relevant_support_rules."
+        "Never restart read/extract/rules loops once past get_relevant_support_rules. If you called assess, the next call must be decide."
     )
 
 
@@ -733,6 +733,18 @@ def build_message_observer(
 ) -> Callable[[Message], None]:
     status_printer = build_status_printer(status_sink)
     last_extract_claim: dict[str, Any] = {}
+    extract_enrichment_case_id = (
+        next(iter(stop_after_case_ids))
+        if stop_after_case_ids and len(stop_after_case_ids) == 1
+        else None
+    )
+
+    def _can_enrich_from_last_extract(case_id: Any) -> bool:
+        return (
+            extract_enrichment_case_id is not None
+            and case_id is not None
+            and str(case_id) == str(extract_enrichment_case_id)
+        )
 
     def _maybe_stop_after_saved() -> None:
         if not stop_after_case_ids:
@@ -762,6 +774,29 @@ def build_message_observer(
 
         case_state = extract_case_state_result(message)
         if case_state is not None:
+            # Enrich/correct saved data with canonical extract info (case_type, labels)
+            # so that even if model passed flipped case_type or wrong labels in save,
+            # the persisted record and reports use extract's values.
+            rec = last_extract_claim.get("recommended_labels") or []
+            ctype = last_extract_claim.get("case_type")
+            proj = last_extract_claim.get("project")
+            lang = last_extract_claim.get("detected_language")
+            can_enrich = _can_enrich_from_last_extract(case_state.get("case_id"))
+            if can_enrich and (rec or ctype or lang):
+                d = case_state.setdefault("data", {})
+                if ctype:
+                    case_state["issue_type"] = ctype
+                    d["issue_type"] = ctype
+                    d["case_type"] = ctype
+                if rec:
+                    case_state["matched_labels"] = list(rec)
+                    d["recommended_labels"] = list(rec)
+                    # Do not overwrite labels_applied here; apply observer will set the actual applied
+                if lang:
+                    case_state["detected_language"] = lang
+                    d["detected_language"] = lang
+            if can_enrich and proj and not case_state.get("project_label"):
+                case_state["project_label"] = proj
             case_states.append(case_state)
             _maybe_stop_after_saved()
             return
@@ -779,19 +814,20 @@ def build_message_observer(
                 if auto_saved is not None:
                     # Enrich with info from extract so case reports have
                     # case_type, recommended labels etc even on rescue path.
+                    can_enrich = _can_enrich_from_last_extract(auto_saved.get("case_id"))
                     rec_labels = last_extract_claim.get("recommended_labels") or []
                     case_type = last_extract_claim.get("case_type")
                     proj = last_extract_claim.get("project")
-                    if proj and not auto_saved.get("project_label"):
+                    if can_enrich and proj and not auto_saved.get("project_label"):
                         auto_saved["project_label"] = proj
-                    if rec_labels:
+                    if can_enrich and rec_labels:
                         auto_saved["matched_labels"] = list(rec_labels)
                         # labels_applied left [] until apply tool runs and we update
                         if "labels_applied" not in auto_saved:
                             auto_saved["labels_applied"] = []
-                    if case_type and not auto_saved.get("issue_type"):
+                    if can_enrich and case_type and not auto_saved.get("issue_type"):
                         auto_saved["issue_type"] = case_type
-                    if last_extract_claim:
+                    if can_enrich and last_extract_claim:
                         d = auto_saved.setdefault("data", {})
                         if not d.get("case_type") and case_type:
                             d["case_type"] = case_type
@@ -823,6 +859,12 @@ def build_message_observer(
                     if isinstance(last.get("data"), dict):
                         last["data"]["labels_applied"] = list(applied)
                         last["data"]["applied_labels"] = list(applied)
+                    if not last.get("project_label"):
+                        proj = last_extract_claim.get("project")
+                        if proj:
+                            last["project_label"] = proj
+                            if isinstance(last.get("data"), dict):
+                                last["data"]["project_label"] = proj
             except Exception:
                 pass
 

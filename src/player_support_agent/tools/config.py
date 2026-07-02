@@ -321,7 +321,14 @@ class SupportPolicyConfig(BaseModel):
     auto_draft_confidence_threshold: float = 0.85
     human_review_confidence_threshold: float = 0.60
     auto_draft_without_logs_case_types: list[str] = Field(
-        default_factory=lambda: ["ad_issue", "feature_request"],
+        default_factory=lambda: [
+            "ad_issue",
+            "feature_request",
+            "save_transfer",
+            "gameplay_misunderstanding",
+            "general_question",
+            "account_binding",
+        ],
     )
     default_language: str = "zh-CN"
 

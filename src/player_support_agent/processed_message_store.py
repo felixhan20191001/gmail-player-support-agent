@@ -17,8 +17,9 @@ TERMINAL_STATUSES = {
     "skipped",
     "processed",  # Legacy status from earlier scheduler versions.
 }
-# Local store outcomes that may be skipped only when Gmail no longer marks UNREAD.
-REPROCESS_WHEN_UNREAD_STATUSES = TERMINAL_STATUSES | {"failed"}
+# Local successful outcomes may be re-selected while Gmail still marks UNREAD.
+# Failed outcomes require an explicit retry so one bad message cannot loop forever.
+REPROCESS_WHEN_UNREAD_STATUSES = TERMINAL_STATUSES
 VALID_MESSAGE_STATUSES = TERMINAL_STATUSES | {"failed"}
 STATUS_ALIASES = {
     "drafted": "draft_created",
@@ -142,6 +143,49 @@ def _extract_labels(data: dict[str, Any]) -> list[str]:
     if not isinstance(labels, list):
         return []
     return [str(label) for label in labels]
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if item is not None]
+
+
+def _with_unread_reprocess_state(
+    candidate: dict[str, Any],
+    state: dict[str, Any],
+    *,
+    status: str,
+) -> dict[str, Any]:
+    """Attach compact local terminal state needed to finish Gmail cleanup."""
+
+    state_data = state.get("data")
+    if not isinstance(state_data, dict):
+        state_data = {}
+
+    recommended_labels = _string_list(state_data.get("recommended_labels"))
+    if not recommended_labels:
+        recommended_labels = _string_list(state_data.get("labels_applied"))
+    if not recommended_labels:
+        recommended_labels = _string_list(state.get("matched_labels"))
+
+    return {
+        **candidate,
+        "reprocess_gmail_unread": True,
+        "existing_status": status,
+        "existing_draft_id": (
+            state.get("draft_id")
+            or _extract_draft_id(state_data)
+            or None
+        ),
+        "existing_issue_type": (
+            state_data.get("issue_type")
+            or state_data.get("case_type")
+            or None
+        ),
+        "existing_recommended_labels": recommended_labels,
+        "existing_labels_applied": _string_list(state.get("labels_applied")),
+    }
 
 
 class ProcessedMessageStore:
@@ -275,6 +319,54 @@ class ProcessedMessageStore:
             }
         self._write(data)
 
+    def clear_candidate_processing_state(self, candidates: list[dict[str, Any]]) -> int:
+        """Reset local processing outcomes for the current discovered candidates."""
+
+        data = self._read()
+        messages = data["messages"]
+        now = utc_now()
+        cleared = 0
+        seen: set[str] = set()
+        for candidate in candidates:
+            message_id = str(candidate.get("message_id") or "")
+            if not message_id or message_id in seen:
+                continue
+            seen.add(message_id)
+            existing = messages.get(message_id, {})
+            reset_state = {
+                **existing,
+                "message_id": message_id,
+                "thread_id": candidate.get("thread_id", existing.get("thread_id", "")),
+                "project_label": candidate.get(
+                    "project_label",
+                    existing.get("project_label"),
+                ),
+                "matched_labels": candidate.get(
+                    "matched_labels",
+                    existing.get("matched_labels", []),
+                ),
+                "first_seen_at": existing.get("first_seen_at", now),
+                "status": "pending",
+                "retry_count": 0,
+                "agent_run_id": None,
+                "last_processed_at": None,
+                "error_message": None,
+            }
+            for stale_field in (
+                "skip_category",
+                "agent_answer_preview",
+                "draft_id",
+                "labels_applied",
+                "human_review_reason",
+                "data",
+            ):
+                reset_state.pop(stale_field, None)
+            messages[message_id] = reset_state
+            cleared += 1
+        if cleared:
+            self._write(data)
+        return cleared
+
     def select_unprocessed(
         self,
         candidates: list[dict[str, Any]],
@@ -311,15 +403,16 @@ class ProcessedMessageStore:
         max_retries: int,
         ignore_store: bool,
         unread_message_ids: set[str] | None = None,
+        reprocess_failed_unread: bool = False,
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Select candidates to process and explain skipped ones.
 
-        Gmail UNREAD candidates are always selected, even when the local store
-        already has a terminal or failed outcome. Only READ messages with a
-        terminal/failed store record may be skipped.
-
-        Returns ``(selected, skipped_details)`` where each skipped detail contains
-        ``message_id``, ``store_status``, ``gmail_unread``, and ``reason``.
+        Gmail UNREAD is the source of truth for successful terminal local
+        records: they are re-selected while Gmail still marks the message
+        UNREAD, so the worker can clear any unfinished Gmail state. Failed local
+        records are different: they are skipped unless the caller explicitly
+        enables ``retry_failed``. This prevents one model-loop failure from
+        monopolizing every automation round.
         """
 
         if ignore_store:
@@ -361,7 +454,13 @@ class ProcessedMessageStore:
                 )
                 continue
             if gmail_unread and status in REPROCESS_WHEN_UNREAD_STATUSES:
-                selected.append({**candidate, "reprocess_gmail_unread": True})
+                selected.append(
+                    _with_unread_reprocess_state(
+                        candidate,
+                        state,
+                        status=status,
+                    )
+                )
                 if len(selected) >= limit:
                     break
                 continue
@@ -524,3 +623,62 @@ class ProcessedMessageStore:
                 "error_message": error_message,
             }
         self._write(data)
+
+    def recover_stale_processing(
+        self,
+        *,
+        stale_after_minutes: int,
+        target_status: str = "failed",
+        now: datetime | None = None,
+    ) -> list[dict[str, Any]]:
+        """Explicitly recover local messages stuck in processing state."""
+
+        if target_status not in {"failed", "pending"}:
+            raise ValueError("target_status must be 'failed' or 'pending'")
+        if stale_after_minutes < 1:
+            raise ValueError("stale_after_minutes must be positive")
+
+        data = self._read()
+        messages = data["messages"]
+        current = now or datetime.now(timezone.utc)
+        recovered: list[dict[str, Any]] = []
+
+        for message_id, state in messages.items():
+            if state.get("status") != "processing":
+                continue
+            raw_processed_at = state.get("last_processed_at")
+            if not raw_processed_at:
+                continue
+            try:
+                processed_at = datetime.fromisoformat(str(raw_processed_at))
+            except ValueError:
+                continue
+            if processed_at.tzinfo is None:
+                processed_at = processed_at.replace(tzinfo=timezone.utc)
+            age_minutes = (current - processed_at).total_seconds() / 60
+            if age_minutes < stale_after_minutes:
+                continue
+
+            previous_run_id = state.get("agent_run_id")
+            state["status"] = target_status
+            state["last_processed_at"] = current.isoformat()
+            if target_status == "failed":
+                state["error_message"] = (
+                    "Stale processing recovered after "
+                    f"{int(age_minutes)} minutes; previous run_id={previous_run_id}"
+                )
+            else:
+                state["error_message"] = None
+            recovered.append(
+                {
+                    "message_id": str(message_id),
+                    "thread_id": str(state.get("thread_id") or ""),
+                    "previous_run_id": previous_run_id,
+                    "previous_status": "processing",
+                    "new_status": target_status,
+                }
+            )
+
+        if recovered:
+            self._write(data)
+        return recovered

@@ -20,6 +20,7 @@ import httpx
 from forge.errors import ToolResolutionError
 
 from .config import GmailConfig
+from .tool_shared_state import ToolSharedState
 
 GMAIL_UNREAD_LABEL_ID = "UNREAD"
 _SENDER_EMAIL_RE = re.compile(r"^[^@\s<>\"']+@[^@\s<>\"']+\.[^@\s<>\"']+$")
@@ -181,13 +182,18 @@ def _raise_http_error(action: str, url: str, exc: httpx.HTTPError) -> None:
 class GmailTools:
     """Thin Gmail API wrapper for Forge tools."""
 
-    def __init__(self, config: GmailConfig) -> None:
+    def __init__(
+        self,
+        config: GmailConfig,
+        shared_state: ToolSharedState | None = None,
+    ) -> None:
         self.config = config
         self._label_cache: dict[str, str] | None = None
         self._label_details: dict[str, dict[str, Any]] = {}
         self._cached_access_token: str | None = None
         self._cached_access_token_expires_at: float = 0.0
         self._http_client: httpx.AsyncClient | None = None
+        self._shared_state = shared_state or ToolSharedState()
 
     async def aclose(self) -> None:
         if self._http_client is not None:
@@ -606,11 +612,23 @@ class GmailTools:
                 }
             )
 
-        return {
+        result = {
             "thread_id": data.get("id", thread_id),
             "history_id": data.get("historyId"),
             "messages": messages,
         }
+
+        sender_email: str | None = None
+        for msg in messages:
+            sender = _first_email_address(msg.get("from", ""))
+            if sender:
+                sender_email = sender
+                break
+        self._shared_state.set_last_thread_context(
+            result["thread_id"], sender_email,
+        )
+
+        return result
 
     async def _reply_recipient_for_thread(self, thread_id: str) -> str:
         url = (
@@ -746,17 +764,105 @@ class GmailTools:
         if not message_ids:
             raise ToolResolutionError("message_ids is required")
 
-        applied_labels: list[str] = []
-        rejected_labels: list[dict[str, str]] = []
-        add_ids: list[str] = []
-        for name in label_names:
-            try:
-                label_ids = await self._label_ids_for_names([name])
-            except ToolResolutionError as exc:
-                rejected_labels.append({"label": name, "error": str(exc)})
+        requested_labels: list[str] = []
+        rejected_input_labels: list[dict[str, str]] = []
+        for raw_name in label_names:
+            name = str(raw_name or "").strip()
+            if not name:
+                rejected_input_labels.append(
+                    {"label": "", "error": "label_names must not contain blank labels"}
+                )
                 continue
-            applied_labels.append(name)
-            add_ids.extend(label_ids)
+            requested_labels.append(name)
+
+        if rejected_input_labels or not requested_labels:
+            if not requested_labels and not rejected_input_labels:
+                rejected_input_labels.append(
+                    {"label": "", "error": "label_names is required"}
+                )
+            return {
+                "message_ids": message_ids,
+                "applied_labels": [],
+                "rejected_labels": rejected_input_labels,
+                "partial_success": False,
+                "next_steps": [
+                    "Call apply_existing_gmail_labels with the exact non-empty label_names "
+                    "from extract_feedback_claim.recommended_labels.",
+                    "Do not rely on tool fallback labels.",
+                ],
+            }
+
+        last_extract_claim = self._shared_state.get_last_extract_claim()
+        recommended_labels = [
+            str(label).strip()
+            for label in last_extract_claim.get("recommended_labels", [])
+            if str(label).strip()
+        ]
+        if (
+            last_extract_claim
+            and "recommended_labels" in last_extract_claim
+            and not recommended_labels
+        ):
+            return {
+                "message_ids": message_ids,
+                "applied_labels": [],
+                "rejected_labels": [
+                    {
+                        "label": ", ".join(requested_labels),
+                        "error": (
+                            "extract_feedback_claim.recommended_labels is empty; "
+                            "refusing to apply labels"
+                        ),
+                    }
+                ],
+                "recommended_labels": [],
+                "partial_success": False,
+                "next_steps": [
+                    "Do not apply labels when extract_feedback_claim returned no recommended_labels.",
+                    "Call save_case_state with a failed or human_review outcome, or re-run "
+                    "extract_feedback_claim once if the case_type was clearly wrong.",
+                ],
+            }
+        if recommended_labels and sorted(requested_labels) != sorted(recommended_labels):
+            return {
+                "message_ids": message_ids,
+                "applied_labels": [],
+                "rejected_labels": [
+                    {
+                        "label": ", ".join(requested_labels),
+                        "error": (
+                            "label_names must exactly match "
+                            "extract_feedback_claim.recommended_labels"
+                        ),
+                    }
+                ],
+                "recommended_labels": recommended_labels,
+                "partial_success": False,
+                "next_steps": [
+                    "Retry apply_existing_gmail_labels once with exactly the recommended_labels "
+                    "returned by extract_feedback_claim.",
+                    "If labels still cannot be applied, call save_case_state with the failure "
+                    "or handoff state instead of inventing labels.",
+                ],
+            }
+
+        async def _try_apply(
+            names: list[str],
+        ) -> tuple[list[str], list[dict[str, str]], list[str]]:
+            applied: list[str] = []
+            rejected: list[dict[str, str]] = []
+            ids: list[str] = []
+            for name in names:
+                try:
+                    label_ids = await self._label_ids_for_names([name])
+                except ToolResolutionError as exc:
+                    rejected.append({"label": name, "error": str(exc)})
+                    continue
+                applied.append(name)
+                ids.extend(label_ids)
+            return applied, rejected, ids
+
+        applied_labels, rejected_labels, add_ids = await _try_apply(requested_labels)
 
         if not add_ids:
             return {
@@ -765,8 +871,8 @@ class GmailTools:
                 "rejected_labels": rejected_labels,
                 "partial_success": False,
                 "next_steps": [
-                    "Use only extract_feedback_claim.recommended_labels or labels "
-                    "returned by get_existing_gmail_labels.",
+                    "Use only extract_feedback_claim.recommended_labels (exact list from extract) or labels "
+                    "returned by get_existing_gmail_labels. Do not substitute e.g. 功能建议 for 存档转移.",
                     "If a Gmail draft was already created, call save_case_state "
                     "immediately with status=draft_created and the draft_id.",
                     "Do not restart read_email_thread or extract_feedback_claim.",
@@ -797,7 +903,7 @@ class GmailTools:
         if rejected_labels:
             payload["rejected_labels"] = rejected_labels
             payload["next_steps"] = [
-                "Some labels were skipped. Apply any remaining recommended_labels, "
+                "Some labels were skipped. Apply using exactly extract_feedback_claim.recommended_labels, "
                 "then call save_case_state with the applied ones.",
             ]
         return payload
@@ -840,8 +946,23 @@ class GmailTools:
         """Create a Gmail draft. This tool never sends the draft."""
 
         requested_to = to
-        if thread_id:
-            to = await self._reply_recipient_for_thread(thread_id)
+        recipient_source = "model_argument"
+        resolved_thread_id = thread_id
+
+        known_thread_id = self._shared_state.get_last_thread_id()
+        if thread_id and known_thread_id and thread_id != known_thread_id:
+            resolved_thread_id = known_thread_id
+
+        if resolved_thread_id:
+            try:
+                to = await self._reply_recipient_for_thread(resolved_thread_id)
+                recipient_source = "thread_reply_to"
+            except Exception:
+                fallback_sender = self._shared_state.get_last_sender_email()
+                if fallback_sender:
+                    to = fallback_sender
+                    recipient_source = "cached_sender_fallback"
+                resolved_thread_id = known_thread_id or resolved_thread_id
 
         msg = EmailMessage()
         if self.config.account_email:
@@ -856,8 +977,8 @@ class GmailTools:
         payload: dict[str, Any] = {
             "message": {"raw": _b64url_encode_bytes(msg.as_bytes())}
         }
-        if thread_id:
-            payload["message"]["threadId"] = thread_id
+        if resolved_thread_id:
+            payload["message"]["threadId"] = resolved_thread_id
 
         url = f"{self.config.api_base_url}/users/{self._user_path()}/drafts"
         resp = await self._request(
@@ -872,14 +993,15 @@ class GmailTools:
         return {
             "draft_id": data.get("id"),
             "message_id": data.get("message", {}).get("id"),
-            "thread_id": data.get("message", {}).get("threadId", thread_id),
+            "thread_id": data.get("message", {}).get("threadId", resolved_thread_id),
             "to": to,
             "requested_to": requested_to,
-            "recipient_source": "thread_reply_to" if thread_id else "model_argument",
+            "recipient_source": recipient_source,
             "subject": subject,
             "next_steps": [
                 "Call apply_existing_gmail_labels with the exact label names from "
-                "extract_feedback_claim.recommended_labels (e.g. project + child like 'BlackHole/功能建议').",
+                "extract_feedback_claim.recommended_labels.",
+                "Then call mark_gmail_messages_read with the same message_ids (to clear UNREAD so it is not re-processed).",
                 "Then call save_case_state with status=draft_created, this draft_id, "
                 "and the case message_id. Do not re-read or re-extract.",
                 "Never invent label names; only use those returned by extract_feedback_claim.",

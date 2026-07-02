@@ -18,6 +18,7 @@ from forge import Message, MessageRole, MessageType
 from forge.clients.base import ChunkType, StreamChunk
 from forge.context.strategies import TieredCompact, _estimate_tokens
 from forge.clients.openai_compat import OpenAICompatClient
+from forge.core.reasoning import DEFAULT_REASONING_REPLAY, ReasoningReplay
 from forge.core.workflow import LLMResponse, TextResponse, ToolCall, ToolSpec
 from forge.errors import BackendError
 
@@ -137,6 +138,7 @@ def prepare_deepseek_messages(
 def fold_and_serialize_deepseek(
     messages: list[Message],
     api_format: str,
+    reasoning_replay: ReasoningReplay = DEFAULT_REASONING_REPLAY,
 ) -> list[dict[str, Any]]:
     """Fold REASONING messages into ``reasoning_content`` for DeepSeek tool turns."""
 

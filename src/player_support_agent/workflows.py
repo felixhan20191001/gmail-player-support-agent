@@ -37,6 +37,7 @@ def build_multi_project_workflow(
             "extract_feedback_claim",
             "get_relevant_support_rules",
             "resolve_player_identity",
+            "assess_claim_credibility",
             "decide_support_action",
         ],
         terminal_tool="save_case_state",

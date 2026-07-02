@@ -99,18 +99,22 @@ triggers = [
   "显示空白",
   "页面空白",
   "一片空白",
+  "missing .* (spatula|bomb|bombs|item|target|complete the board|level)",
+  "no (bombs|bomb|items|item|spatula|targets) (anywhere|on the board|to complete)",
+  "level .* (missing|no .* (bomb|item|spatula))",
+  "找不到关卡.*(物品|目标)",
 ]
 priority = 92
-summary = "Blank or empty in-game page/UI; use bug case type, apply bug反馈 label, and ask for screenshot."
+summary = "Blank/empty UI or BlackHole level missing target items (spatula, bombs, etc. not appearing); use bug case type, apply bug反馈 label, and ask for screenshot."
 requires_logs = false
 action = "draft_reply"
 human_review = false
 reply_template = "blank_page_screenshot_request"
 instructions = [
-  "The model must classify case_type=bug when the core complaint is a blank/empty UI area, even if the player mentions having paid.",
+  "The model must classify case_type=bug for blank/empty UI or for BlackHole levels where required target items are missing/not appearing to complete the board (e.g. blue spatula, no bombs, cleared but items remain).",
   "Do not use case_type=payment or project/内购问题 unless the player explicitly says the purchase/charge did not arrive (未到账 / not received).",
   "Apply project/bug反馈 from extract_feedback_claim.recommended_labels.",
-  "Ask for a screenshot or screen recording of the blank area, plus the activity/level name and steps to reproduce.",
+  "In the draft: apologize for the trouble, suggest replaying the level, ask for a screenshot of the level/board + exact level number + steps. **Never tell the player the issue 'is a bug', 'bug feedback', or 'usually a bug' — use neutral language only.**",
 ]
 
 [[rules]]
@@ -327,6 +331,49 @@ instructions = [
 ]
 
 [[rules]]
+id = "ad_reward_missing_screenshot_first"
+case_types = ["ad_issue"]
+triggers = [
+  "watch a commercial",
+  "watch an ad",
+  "after the commercial",
+  "commercial.*doesn't give",
+  "ad.*didn't give",
+  "ad.*did not give",
+  "boost item",
+  "boost items",
+  "no boost",
+  "didn't get.*boost",
+  "did not get.*boost",
+  "doesn't give.*boost",
+  "reward.*not received",
+  "no reward after",
+  "ad reward",
+  "广告后没给",
+  "广告没给",
+  "广告没获得",
+  "广告没拿到",
+  "看广告没给",
+  "看广告没获得",
+  "看广告没拿到",
+  "boost.*not received",
+  "广告奖励没到",
+  "广告奖励没给",
+]
+priority = 93
+summary = "Ad reward not received after watching ad; prioritize asking for ad screenshot first."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "ad_reward_missing_screenshot_first"
+instructions = [
+  "Use when the player reports watching an ad but not receiving the expected reward (boost items, coins, etc.).",
+  "Prioritize asking for ad screenshot first before any other explanation.",
+  "Do not query ClickHouse for ad_issue cases.",
+  "Do not apologize or explain possible causes before asking for screenshot.",
+]
+
+[[rules]]
 id = "ad_issue_screenshot_request"
 case_types = ["ad_issue"]
 triggers = [
@@ -463,6 +510,46 @@ human_review = false
 reply_template = "update_latest_version_request"
 instructions = [
   "Use when app version evidence or player text indicates they are not on the latest version.",
+]
+
+[[rules]]
+id = "blackhole_cloud_save_fb_sync"
+projects = ["BlackHole"]
+case_types = ["save_transfer", "account_binding", "general_question", "feature_request"]
+triggers = [
+  "nieuwe telefoon",
+  "vooruitgang",
+  "new phone",
+  "new device",
+  "another device",
+  "without losing",
+  "losing progress",
+  "lose progress",
+  "transfer progress",
+  "sync progress",
+  "cloud save",
+  "facebook",
+  "fb account",
+  "换手机",
+  "换设备",
+  "同步进度",
+  "云存档",
+  "facebook账号",
+  "fb账号",
+]
+priority = 95
+summary = "BlackHole now supports cloud save: bind Facebook on the current device, then log into the same Facebook account on the new device to sync progress."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "blackhole_cloud_save_fb_sync"
+require_trigger_match = true
+instructions = [
+  "Use when a BlackHole / Eat Everything player asks how to move progress to a new phone/device, sync progress, or bind an account for progress sync.",
+  "Tell the player the latest version supports cloud save.",
+  "Instruct the player to update to the latest version, bind their Facebook account on the current/original device, then log into the same Facebook account on the new device to sync data.",
+  "If the player already lost progress, cannot access the old device, or did not bind Facebook before the loss, do not promise restoration; ask for details or hand off to human support.",
+  "Do not query ClickHouse for this rule.",
 ]
 
 [[rules]]
@@ -717,4 +804,33 @@ human_review = false
 reply_template = "offline_play_explanation"
 instructions = [
   "Mention that rewarded video ads require network access.",
+]
+
+[[rules]]
+id = "freecash_sync_details_request"
+case_types = ["freecash_sync_misunderstanding"]
+triggers = [
+  "freecash",
+  "积分墙",
+  "sync with Freecash",
+  "not syncing with Freecash",
+  "freecash.*sync",
+  "game isn't syncing",
+  "任务.*同步",
+  "没同步",
+  "未到账",
+]
+priority = 72
+summary = "Game not syncing with Freecash offerwall; collect Freecash ID and exact unrewarded stage/task. Never redirect player to Freecash support."
+requires_logs = false
+action = "draft_reply"
+human_review = false
+reply_template = "freecash_sync_details_request"
+instructions = [
+  "Use when player reports game not syncing with Freecash or offerwall task completed but reward not received.",
+  "**Do NOT tell the player to contact Freecash or the offerwall's customer service.** We will follow up.",
+  "Ask specifically for the player's freecashid (or offerwall app account ID) and exactly which stage/task/offer was completed without the reward syncing to the game.",
+  "Use the freecash_sync_details_request template to ask for these details politely and clearly.",
+  "In extract_feedback_claim use case_type=freecash_sync_misunderstanding.",
+  "After rules, proceed to decide and use the template-based draft to request the missing info.",
 ]

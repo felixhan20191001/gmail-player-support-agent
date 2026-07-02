@@ -410,7 +410,7 @@ class AutomationScheduler:
                 minimum=1,
                 maximum=200,
             ),
-            max_new=_bounded_int(payload, "max_new", default=5, minimum=1, maximum=20),
+            max_new=_bounded_int(payload, "max_new", default=1, minimum=1, maximum=20),
             max_retries=_bounded_int(
                 payload,
                 "max_retries",
@@ -460,23 +460,40 @@ class AutomationScheduler:
             return self._status_unlocked()
 
     def _run_loop(self) -> None:
+        """Automation 轮巡主循环。
+
+        当一次发现有多封新未读邮件时，会连续处理（多次调用 run_once 处理每批 max_new），
+        直到本次发现的候选被处理完（select 返回 0 或 already_processed/skipped），
+        然后才 sleep interval。保证“依次都处理完”。
+        """
+        SKIP_NO_WORK = {"skipped", "already_processed", "discovery_only"}
         while not self._stop_event.is_set():
+            trigger_at = _utc_now_iso()
             try:
                 result = asyncio.run(self._run_cycle())
             except Exception as exc:
                 with self._lock:
-                    self.last_run_at = _utc_now_iso()
+                    self.last_run_at = trigger_at
                     self.last_status = "failed"
                     self.last_error = f"{type(exc).__name__}: {exc}"
                     self.cycle_count += 1
+                # 错误后进入 sleep，避免无限打转
             else:
                 with self._lock:
-                    self.last_run_at = _utc_now_iso()
+                    self.last_run_at = trigger_at
                     self.last_status = str(result.get("status") or "completed")
                     self.last_run_id = str(result.get("run_id") or "") or None
                     self.last_error = str(result.get("error") or "") or None
                     self.cycle_count += 1
                     self._append_cycle_snapshot(result)
+
+                sel_count = int(result.get("selected_count") or 0)
+                cand_count = int(result.get("candidate_count") or 0)
+                st = str(result.get("status") or "")
+                # 即使本批是 skipped/no_content，只要本次发现有候选，就继续立即 drain
+                # （配合 no_content 也会 mark_read，可快速清空 junk backlog，避免每5分钟只清1封）
+                if (sel_count > 0 or cand_count > 0) and st not in {"already_processed", "discovery_only"}:
+                    continue
 
             with self._lock:
                 settings = self.settings
@@ -501,6 +518,7 @@ class AutomationScheduler:
                 raise RuntimeError("automation settings missing")
             with self._lock:
                 session_id = self.session_id
+                clear_store_state = settings.live_run and self.cycle_count == 0
             return await run_once(
                 support_config=support_config,
                 run_config=run_config,
@@ -513,6 +531,7 @@ class AutomationScheduler:
                 query=settings.query,
                 ignore_store=False,
                 discovery_only=False,
+                clear_store_state=clear_store_state,
                 run_source="automation",
                 automation_session_id=session_id,
             )
@@ -1564,7 +1583,12 @@ PAGE = """\
             add('assistant', event.message);
           }
         } else if (event.type === 'cycle_done') {
-          add('assistant', event.text || event.headline || event.status || '自动处理完成一轮');
+          const idx = event.cycle_index || '?';
+          const t = event.created_at ? formatRunTime(event.created_at) : '';
+          const timePart = t ? ` (${t})` : '';
+          const body = (event.text || '').replace(/^\\[自动\\] 第 \\d+ 轮(\\s*\\([^)]*\\))?\\n?/, '') || event.headline || event.status || '';
+          const displayText = `[自动] 第 ${idx} 轮${timePart}\n${body}`.trim();
+          add('assistant', displayText);
           automationLastRunId = event.run_id || automationLastRunId;
         }
       }

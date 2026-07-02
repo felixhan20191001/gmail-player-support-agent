@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from typing import Any, Literal
 
 from .config import SupportPolicyConfig
+from .feedback_text import has_substantive_feedback_text
+from .tool_shared_state import ToolSharedState
 
 _REMOVE_ADS_PRODUCT_RE = re.compile(
     r"remove\s*ads?|no\s*ads?|noads|ad\s*free|removead",
@@ -189,8 +191,13 @@ def _draft_asks_for_disallowed_identity(draft_body: str) -> bool:
 class DecisionTools:
     """Small policy helpers that keep risky choices explicit."""
 
-    def __init__(self, config: SupportPolicyConfig) -> None:
+    def __init__(
+        self,
+        config: SupportPolicyConfig,
+        shared_state: ToolSharedState | None = None,
+    ) -> None:
         self.config = config
+        self._shared_state = shared_state or ToolSharedState()
 
     def extract_feedback_claim(
         self,
@@ -211,13 +218,35 @@ class DecisionTools:
         """Normalize the model's extracted claim into a stable shape."""
 
         recommended_labels = self.config.label_by_case_type.get(case_type, [])
-        if project and case_type != "no_content":
+        label_selection_reason: str | None = None
+        no_content_rejected = (
+            case_type == "no_content"
+            and has_substantive_feedback_text(language_source_text)
+        )
+        if case_type == "no_content":
+            if no_content_rejected:
+                recommended_labels = []
+                label_selection_reason = "rejected_substantive_feedback"
+            else:
+                recommended_labels += self.config.label_suffix_by_case_type.get(
+                    "no_content",
+                    [],
+                )
+                recommended_labels = _dedupe(recommended_labels)
+                if available_label_names is not None:
+                    available = set(available_label_names)
+                    recommended_labels = [
+                        label for label in recommended_labels if label in available
+                    ]
+                if recommended_labels:
+                    label_selection_reason = "global_no_content"
+        elif project:
             recommended_labels = [
                 label
                 for label in recommended_labels
                 if _label_belongs_to_project(label, project)
             ]
-        label_selection_reason: str | None = None
+
         if project and case_type == "ads_after_purchase":
             available = (
                 set(available_label_names) if available_label_names is not None else None
@@ -249,7 +278,7 @@ class DecisionTools:
                     label for label in recommended_labels if label in available
                 ]
 
-        return {
+        result = {
             "project": project,
             "case_type": case_type,
             "summary": summary,
@@ -264,7 +293,20 @@ class DecisionTools:
             "language_source_text": language_source_text,
             "recommended_labels": recommended_labels,
             "label_selection_reason": label_selection_reason,
+            "no_content_rejected": no_content_rejected,
         }
+        if no_content_rejected:
+            result["validation_error"] = (
+                "case_type=no_content was rejected because language_source_text "
+                "contains substantive player feedback."
+            )
+            result["next_steps"] = [
+                "Do not apply the 无内容 label.",
+                "Call extract_feedback_claim again once with the specific non-no_content case type.",
+                "Then continue with get_relevant_support_rules and the normal draft or handoff workflow.",
+            ]
+        self._shared_state.set_last_extract_claim(result)
+        return result
 
     def resolve_player_identity(
         self,
@@ -479,6 +521,12 @@ class DecisionTools:
     ) -> dict[str, Any]:
         """Decide whether to draft a reply or hand off to a human."""
 
+        # Prefer the case_type from extract_feedback_claim to enforce consistency
+        # (model must not flip e.g. save_transfer -> feature_request).
+        ext = self._shared_state.get_last_extract_claim() if self._shared_state else {}
+        if ext.get("case_type"):
+            case_type = ext["case_type"]
+
         evidence_recommended_action = _normalize_evidence_recommended_action(
             evidence_recommended_action
         )
@@ -636,6 +684,13 @@ class DecisionTools:
         matched_rule_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Review a draft for generic support safety before Gmail creation."""
+
+        # Enforce extract case_type and detected_language for consistency in reviews/checks.
+        ext = self._shared_state.get_last_extract_claim() if self._shared_state else {}
+        if ext.get("case_type"):
+            case_type = ext["case_type"]
+        if ext.get("detected_language"):
+            detected_language = ext["detected_language"]
 
         text = draft_body.casefold()
         issues: list[str] = []

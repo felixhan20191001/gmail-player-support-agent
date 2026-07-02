@@ -37,6 +37,29 @@ instructions = ["No substantive feedback."]
     assert result["matched_rules"][0]["action"] == "apply_label_only"
 
 
+def test_relevant_support_rules_reject_no_content_when_question_has_freecash_issue():
+    tools = RuleTools(KnowledgeConfig())
+
+    email_text = (
+        "platform:Android ver:1.17.1 userid:924e44ff832d0148\n"
+        "I need some help. My question is: i have been playing your game through "
+        "Freecash and i completed task n was not compensated..freecash is saying "
+        "because you did not approve of me showing proof i completed the level tasks "
+        "I needed.. i would like to be re reviewed n see that I did..i may not have "
+        "had the exact day but I completed tasks in alotted time like required"
+    )
+    result = tools.get_relevant_support_rules(
+        project="BlackHole",
+        case_type="no_content",
+        email_text=email_text,
+    )
+
+    matched_ids = {rule["id"] for rule in result["matched_rules"]}
+    assert "empty_feedback_apply_no_content_label" not in matched_ids
+    assert result["no_content_rejected"] is True
+    assert "substantive" in result["guidance"]
+
+
 def test_relevant_support_rules_match_case_type_and_triggers(tmp_path: Path):
     rules_path = tmp_path / "rules.toml"
     rules_path.write_text(
@@ -466,6 +489,72 @@ def test_relevant_support_rules_match_feature_request_timer_email():
     assert result["guidance"] is not None
     assert "requires_logs=false" in result["guidance"]
     assert "get_coin_frenzy_investigation_playbook" in result["guidance"]
+
+
+def test_relevant_support_rules_match_blackhole_cloud_save_transfer_email():
+    tools = RuleTools(KnowledgeConfig())
+
+    email_text = (
+        "platform:Android ver:1.15.0 userid:e8bafb20de175160\n"
+        "I need some help. My question is: hoe krijg ik dit spelletje naar een "
+        "nieuwe telefoon? Zonder mijn vooruitgang te verliezen"
+    )
+    result = tools.get_relevant_support_rules(
+        project="BlackHole",
+        case_type="save_transfer",
+        email_text=email_text,
+    )
+
+    assert result["matched_rules"][0]["id"] == "blackhole_cloud_save_fb_sync"
+    assert result["matched_rules"][0]["reply_template"] == "blackhole_cloud_save_fb_sync"
+    assert result["matched_rules"][0]["requires_logs"] is False
+    assert "nieuwe telefoon" in result["matched_rules"][0]["trigger_hits"]
+    assert result["recommended_rule_id"] == "blackhole_cloud_save_fb_sync"
+    assert result["guidance"] is not None
+
+
+def test_get_reply_template_loads_blackhole_cloud_save_fb_sync_en():
+    tools = RuleTools(KnowledgeConfig())
+
+    result = tools.get_reply_template(
+        "blackhole_cloud_save_fb_sync",
+        language="English",
+        project="BlackHole",
+    )
+
+    assert result["language"] == "en"
+    assert "cloud save" in result["body"].casefold()
+    assert "Facebook" in result["body"]
+    assert "same Facebook account" in result["body"]
+
+
+def test_get_reply_template_maps_dutch_alias_for_blackhole_cloud_save_fb_sync():
+    tools = RuleTools(KnowledgeConfig())
+
+    result = tools.get_reply_template(
+        "blackhole_cloud_save_fb_sync",
+        language="Dutch",
+        project="BlackHole",
+    )
+
+    assert result["requested_language"] == "nl"
+    assert result["language"] == "nl"
+    assert "cloudopslag" in result["body"].casefold()
+    assert "Facebook" in result["body"]
+
+
+def test_get_reply_template_loads_blackhole_cloud_save_fb_sync_zh():
+    tools = RuleTools(KnowledgeConfig())
+
+    result = tools.get_reply_template(
+        "blackhole_cloud_save_fb_sync",
+        language="zh-CN",
+        project="BlackHole",
+    )
+
+    assert result["language"] == "zh-CN"
+    assert "云存档" in result["body"]
+    assert "Facebook" in result["body"] or "FB" in result["body"]
 
 
 def test_relevant_support_rules_timer_email_does_not_weak_match_coin_frenzy():

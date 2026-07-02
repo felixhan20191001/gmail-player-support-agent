@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 from datetime import datetime, timezone
+import ssl
 import uuid
 from typing import Any
 
@@ -27,6 +28,7 @@ from .processed_message_store import summarize_run_status
 from .processed_message_store import text_preview
 from .readiness_check import format_readiness_report, run_readiness_checks
 from .run_result_summary import build_run_result_summary
+from .run_trace import RunTrace
 from .tools.config import SupportAgentConfig, load_config
 from .tools.gmail_tools import GmailTools
 from .tools.notify_tools import NotifyTools
@@ -193,6 +195,8 @@ def build_failure_handoff_summary(
         f"Thread ID: {outcome.get('thread_id')}",
         f"Error: {outcome.get('error_message') or 'unknown'}",
     ]
+    if outcome.get("trace_path"):
+        lines.append(f"Trace: {outcome.get('trace_path')}")
     if answer:
         lines += ["", "Agent answer preview:", text_preview(answer, limit=800) or ""]
     return "\n".join(lines)
@@ -332,6 +336,8 @@ async def run_once(
     query: str | None = None,
     ignore_store: bool = False,
     discovery_only: bool = False,
+    reprocess_failed_unread: bool = False,
+    clear_store_state: bool | None = None,
     status_sink=print,
     run_trace=None,
     run_source: str | None = None,
@@ -402,6 +408,14 @@ async def run_once(
             },
         )
 
+    if clear_store_state is None:
+        clear_store_state = live_run
+
+    if clear_store_state and candidates:
+        cleared_count = store.clear_candidate_processing_state(candidates)
+        if cleared_count:
+            status_sink(f"[调度] 正式处理前已清理本轮候选状态 {cleared_count} 封")
+
     skipped_details: list[dict[str, Any]] = []
     unread_message_ids: set[str] = set()
     if candidates and not ignore_store:
@@ -425,6 +439,7 @@ async def run_once(
             max_retries=max_retries,
             ignore_store=ignore_store,
             unread_message_ids=unread_message_ids,
+            reprocess_failed_unread=reprocess_failed_unread,
         )
 
     if not selected:
@@ -456,69 +471,71 @@ async def run_once(
     if any(item.get("reprocess_gmail_unread") for item in selected):
         status_sink("[调度] 重跑 Gmail 仍为未读的本地已记录邮件")
 
-    store.mark_processing(selected, run_id=run_id)
-    task = build_auto_task(selected, live_run=live_run)
-    if live_run and LIVE_CONFIRMATION not in task:
-        raise RuntimeError("live auto task is missing the confirmation phrase")
-
     runner = SupportAgentRunner(run_config, support_config=support_config)
-    try:
-        result = await runner.run(
-            task,
-            status_sink=status_sink,
-            stop_after_case_ids={item["message_id"] for item in selected},
-            run_trace=run_trace,
+    outcomes: list[dict[str, Any]] = []
+    failure_notifications: list[dict[str, Any]] = []
+    case_states: list[dict[str, Any]] = []
+    answers: list[str] = []
+    live_result = live_run
+
+    for item in selected:
+        one_selected = [item]
+        message_id = str(item["message_id"])
+        trace = run_trace or RunTrace(run_id=f"{run_id}-{message_id}")
+        trace_path = str(getattr(trace, "log_path", ""))
+        store.mark_processing(one_selected, run_id=run_id)
+        task = build_auto_task(one_selected, live_run=live_run)
+        if live_run and LIVE_CONFIRMATION not in task:
+            raise RuntimeError("live auto task is missing the confirmation phrase")
+
+        try:
+            result = await runner.run(
+                task,
+                status_sink=status_sink,
+                stop_after_case_ids={message_id},
+                run_trace=trace,
+            )
+        except Exception as exc:
+            error = f"{type(exc).__name__}: {exc}"
+            store.mark_failed(one_selected, run_id=run_id, error_message=error)
+            failed_outcomes = build_failed_outcomes(one_selected, error_message=error)
+            for outcome in failed_outcomes:
+                outcome["trace_path"] = trace_path
+            notifications = await notify_failed_outcomes(
+                config=support_config,
+                run_id=run_id,
+                outcomes=failed_outcomes,
+                answer=None,
+                status_sink=status_sink,
+            )
+            outcomes.extend(failed_outcomes)
+            failure_notifications.extend(notifications)
+            status_sink(f"[错误] 自动处理失败：{message_id} {error}")
+            continue
+
+        one_outcomes = store.mark_outcomes(
+            one_selected,
+            run_id=run_id,
+            answer=result.answer,
+            case_states=result.case_states,
         )
-    except Exception as exc:
-        error = f"{type(exc).__name__}: {exc}"
-        store.mark_failed(selected, run_id=run_id, error_message=error)
-        outcomes = build_failed_outcomes(selected, error_message=error)
-        failure_notifications = await notify_failed_outcomes(
+        for outcome in one_outcomes:
+            outcome["trace_path"] = trace_path
+        notifications = await notify_failed_outcomes(
             config=support_config,
             run_id=run_id,
-            outcomes=outcomes,
-            answer=None,
+            outcomes=one_outcomes,
+            answer=result.answer,
             status_sink=status_sink,
         )
-        status_sink(f"[错误] 自动处理失败：{error}")
-        return await _record_and_summarize_run(
-            store=store,
-            support_config=support_config,
-            run_id=run_id,
-            status="failed",
-            message=error,
-            result={
-                "status": "failed",
-                "candidate_count": len(candidates),
-                "selected_count": len(selected),
-                "outcomes": outcomes,
-                "failure_notifications": failure_notifications,
-                "error": error,
-            },
-            run_source=run_source,
-            automation_session_id=automation_session_id,
-            live_run=live_run,
-            extra_payload={
-                "selected": selected,
-                "outcomes": outcomes,
-                "failure_notifications": failure_notifications,
-            },
-        )
+        outcomes.extend(one_outcomes)
+        failure_notifications.extend(notifications)
+        case_states.extend(result.case_states)
+        answers.append(result.answer)
+        live_result = result.live_run
 
-    outcomes = store.mark_outcomes(
-        selected,
-        run_id=run_id,
-        answer=result.answer,
-        case_states=result.case_states,
-    )
     run_status = summarize_run_status(outcomes)
-    failure_notifications = await notify_failed_outcomes(
-        config=support_config,
-        run_id=run_id,
-        outcomes=outcomes,
-        answer=result.answer,
-        status_sink=status_sink,
-    )
+    answer_text = "\n".join(answer for answer in answers if answer)
     status_text = format_auto_run_status_text(run_status, outcomes=outcomes)
     prefix = "[错误]" if run_status == "failed" else "[完成]"
     status_sink(f"{prefix} 自动处理结果：{status_text}")
@@ -534,7 +551,7 @@ async def run_once(
             "selected_count": len(selected),
             "outcomes": outcomes,
             "failure_notifications": failure_notifications,
-            "answer": result.answer,
+            "answer": answer_text,
         },
         run_source=run_source,
         automation_session_id=automation_session_id,
@@ -542,9 +559,9 @@ async def run_once(
         extra_payload={
             "selected": selected,
             "outcomes": outcomes,
-            "case_states": result.case_states,
-            "live_run": result.live_run,
-            "answer_preview": text_preview(result.answer, limit=1000),
+            "case_states": case_states,
+            "live_run": live_result,
+            "answer_preview": text_preview(answer_text, limit=1000),
             "failure_notifications": failure_notifications,
         },
     )
@@ -555,9 +572,26 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--config", default=DEFAULT_CONFIG)
     add_model_cli_args(parser, default_max_iterations=28)
     parser.add_argument("--max-candidates", type=int, default=20)
-    parser.add_argument("--max-new", type=int, default=5)
+    parser.add_argument("--max-new", type=int, default=1)
     parser.add_argument("--max-retries", type=int, default=3)
     parser.add_argument("--retry-failed", action="store_true")
+    parser.add_argument(
+        "--recover-stale-processing",
+        action="store_true",
+        help="Recover local processed-store messages stuck in processing state.",
+    )
+    parser.add_argument(
+        "--stale-after-minutes",
+        type=int,
+        default=120,
+        help="Minimum processing age before --recover-stale-processing changes state.",
+    )
+    parser.add_argument(
+        "--recover-stale-status",
+        choices=("failed", "pending"),
+        default="failed",
+        help="State to assign to stale processing records during explicit recovery.",
+    )
     parser.add_argument(
         "--live",
         action="store_true",
@@ -631,26 +665,84 @@ async def main_async() -> None:
             raise SystemExit(1)
         return
     store = ProcessedMessageStore(support_config.state.processed_store_path)
-
-    while True:
-        result = await run_once(
-            support_config=support_config,
-            run_config=run_config,
-            store=store,
-            max_candidates=args.max_candidates,
-            max_new=args.max_new,
-            retry_failed=args.retry_failed,
-            max_retries=args.max_retries,
-            live_run=args.live,
-            query=args.query,
-            ignore_store=args.ignore_store,
-            discovery_only=args.discovery_only,
+    if getattr(args, "recover_stale_processing", False):
+        recovered = store.recover_stale_processing(
+            stale_after_minutes=getattr(args, "stale_after_minutes", 120),
+            target_status=getattr(args, "recover_stale_status", "failed"),
         )
+        recovery_run_id = new_run_id()
+        store.record_run(
+            run_id=recovery_run_id,
+            status="completed",
+            message="recover stale processing",
+            payload={
+                "mode": "recover_stale_processing",
+                "stale_after_minutes": getattr(args, "stale_after_minutes", 120),
+                "target_status": getattr(args, "recover_stale_status", "failed"),
+                "recovered_count": len(recovered),
+                "recovered": recovered,
+            },
+        )
+        print(f"Recovered stale processing records: {len(recovered)}")
+        for item in recovered:
+            print(
+                f"- {item['message_id']} {item['previous_status']} -> "
+                f"{item['new_status']} (run {item.get('previous_run_id')})"
+            )
+        return
+
+    # 自动化轮巡 drain 逻辑：
+    # 一次发现多封未读时，连续调用 run_once 处理完所有可处理的批次（每批受 max_new 限制），
+    # 直到没有新候选，才 sleep interval。
+    SKIP_NO_WORK = {"already_processed", "discovery_only"}
+
+    async def _run_once_with_transient_retry(**kwargs):
+        """对 SSL、连接类瞬时错误做少量重试，避免单次网络抖动导致整轮失败转人工。"""
+        for attempt in range(3):
+            try:
+                return await run_once(**kwargs)
+            except (ssl.SSLError, ConnectionError, asyncio.TimeoutError) as exc:
+                if attempt == 2:
+                    raise
+                status_sink(f"[警告] 瞬时网络错误（{type(exc).__name__}），重试 {attempt+1}/2 ...")
+                await asyncio.sleep(2 + attempt)
+        return {}
+
+    clear_live_store_state = bool(args.live)
+    while True:
+        try:
+            result = await _run_once_with_transient_retry(
+                support_config=support_config,
+                run_config=run_config,
+                store=store,
+                max_candidates=args.max_candidates,
+                max_new=args.max_new,
+                retry_failed=args.retry_failed,
+                max_retries=args.max_retries,
+                live_run=args.live,
+                query=args.query,
+                ignore_store=args.ignore_store,
+                discovery_only=args.discovery_only,
+                clear_store_state=clear_live_store_state,
+            )
+        except Exception as exc:
+            # 记录失败但不让 SSL 等导致整个自动化停止，继续下次轮询
+            status_sink(f"[错误] 本轮自动处理异常（将重试下次轮询）：{type(exc).__name__}: {exc}")
+            result = {"status": "failed", "selected_count": 0, "candidate_count": 0, "error": str(exc)}
+        clear_live_store_state = False
         if result.get("answer"):
             print("\n回答：")
             print(result["answer"])
         if args.interval_seconds <= 0:
             return
+        sel_count = int(result.get("selected_count") or 0)
+        cand_count = int(result.get("candidate_count") or 0)
+        st = str(result.get("status") or "")
+        # 即使本批是 skipped/no_content，只要本次发现有候选，就继续立即 drain
+        # （配合 no_content 也会 mark_read，可快速清空 junk backlog，避免每5分钟只清1封）
+        if (sel_count > 0 or cand_count > 0) and st not in SKIP_NO_WORK:
+            # 还有工作，立即处理下一批（不 sleep）
+            continue
         await asyncio.sleep(args.interval_seconds)
 
 

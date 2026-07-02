@@ -1,6 +1,7 @@
 import inspect
 import json
 import os
+from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import pytest
@@ -14,6 +15,7 @@ from player_support_agent import (
     manual_trigger,
     prompts,
     terminal_chat,
+    workflows,
 )
 from player_support_agent.agent_runner import (
     AgentRunConfig,
@@ -49,6 +51,18 @@ def test_chat_server_does_not_route_by_keywords_or_call_gmail_stats():
     assert "gmail_stats" not in source
     assert "re.search" not in source
     assert "record_interactive_run" in source
+
+
+def test_auto_workflow_requires_assess_before_decide():
+    workflow = workflows.build_multi_project_workflow(SupportAgentConfig())
+
+    assert "assess_claim_credibility" in workflow.required_steps
+    assert workflow.required_steps.index("resolve_player_identity") < workflow.required_steps.index(
+        "assess_claim_credibility"
+    )
+    assert workflow.required_steps.index("assess_claim_credibility") < workflow.required_steps.index(
+        "decide_support_action"
+    )
 
 
 def test_chat_server_readiness_buttons_have_chinese_tooltips():
@@ -597,6 +611,50 @@ async def test_chat_server_automation_uses_config_store_and_run_once(
     assert captured["automation_session_id"] == "auto-session-test"
 
 
+@pytest.mark.asyncio
+async def test_chat_server_automation_clears_live_store_only_on_first_cycle(
+    monkeypatch,
+    tmp_path,
+):
+    captured: list[dict[str, object]] = []
+
+    async def fake_run_once(**kwargs):
+        captured.append(dict(kwargs))
+        return {
+            "run_id": f"auto-loop-{len(captured)}",
+            "status": "failed",
+            "candidate_count": 1,
+            "selected_count": 1,
+        }
+
+    monkeypatch.setattr(chat_server, "run_once", fake_run_once)
+    config = SupportAgentConfig(
+        state=StateConfig(processed_store_path=str(tmp_path / "processed.json")),
+    )
+    control = chat_server.ControlState(
+        AgentRunConfig(config_path="config.toml"),
+        support_config=config,
+        manual_store_path=str(tmp_path / "manual.json"),
+    )
+    control.automation.settings = chat_server.AutomationSettings(
+        interval_seconds=300,
+        max_candidates=20,
+        max_new=1,
+        max_retries=3,
+        retry_failed=False,
+        live_run=True,
+        query=None,
+    )
+    control.automation.session_id = "auto-session-test"
+
+    await control.automation._run_cycle()
+    control.automation.cycle_count = 1
+    await control.automation._run_cycle()
+
+    assert captured[0]["clear_store_state"] is True
+    assert captured[1]["clear_store_state"] is False
+
+
 def test_chat_server_automation_start_stop(monkeypatch, tmp_path):
     async def fake_run_once(**_kwargs):
         return {
@@ -630,6 +688,26 @@ def test_chat_server_automation_start_stop(monkeypatch, tmp_path):
 
     stopped = chat_server.stop_automation(control)
     assert stopped["running"] is False
+
+
+def test_chat_server_automation_defaults_to_single_message(tmp_path):
+    control = chat_server.ControlState(
+        AgentRunConfig(config_path="config.toml"),
+        support_config=SupportAgentConfig(
+            state=StateConfig(processed_store_path=str(tmp_path / "processed.json")),
+        ),
+        manual_store_path=str(tmp_path / "manual.json"),
+    )
+
+    started = chat_server.start_automation(
+        control,
+        {
+            "interval_seconds": 60,
+            "live": False,
+        },
+    )
+
+    assert started["max_new"] == 1
 
 
 def test_chat_server_automation_live_requires_confirmation(tmp_path):
@@ -983,7 +1061,7 @@ def test_prompt_skips_clickhouse_when_evidence_unavailable():
     assert "get_relevant_support_rules once" in prompt
     assert "has_strong_match=false" in prompt
     assert "language_fallback=true" in prompt
-    assert "vague_issue_details_request" in prompt
+    assert "vague_issue_details_request" in prompt or "decide_support_action" in prompt or "immediately decide" in prompt.lower()
     assert "Ad issue workflow" in prompt
     assert "Never query ClickHouse for ad_issue" in prompt
 
@@ -996,7 +1074,7 @@ def test_create_draft_prompt_mentions_review_before_draft():
     # Updated order: apply labels (side effect) then final save_case_state
     assert "apply_existing_gmail_labels" in prompt
     assert "save_case_state" in prompt
-    assert "17. save_case_state" in prompt or "save_case_state (with draft_id" in prompt
+    assert "save_case_state" in prompt and ("final" in prompt or "最终" in prompt)
 
 
 def test_auto_task_builder_saves_case_state_before_labels():
@@ -1022,8 +1100,44 @@ def test_prompt_and_auto_task_document_no_content_label_flow():
     assert "save_case_state(status=skipped)" in task
     assert "mark_gmail_messages_read" in prompt
     assert "mark_gmail_messages_read" in task
-    assert "工具不会自动识别" in task
-    assert "Tools do not" in prompt
+    assert "save_case_state(status=skipped)" in task
+    assert ("工具不会自动识别" in task or "务必让 Gmail UNREAD 被清除" in task or "no_content" in task and "decide_support_action" in task)
+    assert "Tools do not" in prompt or "mark_gmail_messages_read" in prompt or "no_content" in prompt
+
+
+def test_prompt_and_auto_task_align_no_content_with_prerequisites():
+    prompt = prompts.MULTI_PROJECT_SUPPORT_PROMPT
+    task = build_auto_task([{"message_id": "m1", "thread_id": "t1"}], live_run=False)
+
+    prompt_section = prompt.split("No-content emails (case_type=no_content):", 1)[1].split(
+        "Player identity rules:",
+        1,
+    )[0]
+    task_section = task.split("由模型判断：若邮件没有实质玩家反馈", 1)[1].split(
+        "页面/区域空白",
+        1,
+    )[0]
+
+    assert "resolve_player_identity" in prompt_section
+    assert "assess_claim_credibility" in prompt_section
+    assert "decide_support_action" in prompt_section
+    assert prompt_section.index("resolve_player_identity") < prompt_section.index(
+        "assess_claim_credibility"
+    )
+    assert prompt_section.index("assess_claim_credibility") < prompt_section.index(
+        "decide_support_action"
+    )
+
+    assert "resolve_player_identity" in task_section
+    assert "assess_claim_credibility" in task_section
+    assert "decide_support_action" in task_section
+    assert task_section.index("resolve_player_identity") < task_section.index(
+        "assess_claim_credibility"
+    )
+    assert task_section.index("assess_claim_credibility") < task_section.index(
+        "decide_support_action"
+    )
+    assert "不要再调用 assess_claim_credibility" not in task_section
 
 
 def test_prompt_and_auto_task_document_thread_latest_player_reply_policy():
@@ -1054,6 +1168,34 @@ def test_auto_task_builder_includes_project_label_hints():
     assert "project_label=BlackHole" in task
     assert "BlackHole/bug反馈" in task
     assert "根据邮件的 Gmail 父标签判断项目" in task
+
+
+def test_auto_task_builder_reprocesses_unread_existing_draft_without_new_draft():
+    task = build_auto_task(
+        [
+            {
+                "message_id": "m1",
+                "thread_id": "t1",
+                "project_label": "BlackHole",
+                "matched_labels": ["BlackHole"],
+                "reprocess_gmail_unread": True,
+                "existing_status": "draft_created",
+                "existing_draft_id": "draft-1",
+                "existing_issue_type": "crash_or_freeze",
+                "existing_recommended_labels": ["BlackHole", "BlackHole/崩溃卡死"],
+                "existing_labels_applied": [],
+            }
+        ],
+        live_run=True,
+    )
+
+    assert "Gmail 仍为 UNREAD" in task
+    assert "existing_draft_id=draft-1" in task
+    assert "绝对不要再次调用 create_gmail_draft" in task
+    assert "沿用 existing_draft_id" in task
+    assert "apply_existing_gmail_labels" in task
+    assert "mark_gmail_messages_read" in task
+    assert "save_case_state(status=draft_created" in task
 
 
 @pytest.mark.asyncio
@@ -1401,6 +1543,166 @@ async def test_auto_worker_reprocesses_unread_terminal_candidate(monkeypatch, tm
     assert result["selected_count"] == 1
     assert result["outcomes"][0]["message_id"] == "m-new"
     assert any("重跑 Gmail 仍为未读的本地已记录邮件" in line for line in statuses)
+
+
+@pytest.mark.asyncio
+async def test_auto_worker_skips_unread_failed_candidate_without_retry(
+    monkeypatch,
+    tmp_path,
+):
+    async def fake_fetch(config, *, max_results, query=None):
+        return [
+            {
+                "message_id": "m1",
+                "thread_id": "t1",
+                "project_label": "BlackHole",
+                "internal_date": 100,
+            }
+        ]
+
+    class FakeGmail:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        async def get_unread_message_ids(self, message_ids):
+            return set(message_ids)
+
+        async def get_message_internal_dates(self, message_ids):
+            return {message_id: 0 for message_id in message_ids}
+
+        async def aclose(self):
+            return None
+
+    class FakeRunner:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def run(self, task, status_sink=None, **kwargs):
+            raise AssertionError("failed messages must not be processed without retry")
+
+    store = ProcessedMessageStore(tmp_path / "manual.json")
+    store.record_seen([{"message_id": "m1", "thread_id": "t1"}])
+    data = store._read()
+    data["messages"]["m1"]["status"] = "failed"
+    data["messages"]["m1"]["retry_count"] = 3
+    store._write(data)
+
+    monkeypatch.setattr(auto_worker, "fetch_new_message_ids", fake_fetch)
+    monkeypatch.setattr(auto_worker, "GmailTools", FakeGmail)
+    monkeypatch.setattr(auto_worker, "SupportAgentRunner", FakeRunner)
+
+    statuses: list[str] = []
+    result = await auto_worker.run_once(
+        support_config=SupportAgentConfig(),
+        run_config=AgentRunConfig(),
+        store=store,
+        max_candidates=10,
+        max_new=1,
+        retry_failed=False,
+        max_retries=3,
+        live_run=False,
+        reprocess_failed_unread=False,
+        status_sink=statuses.append,
+    )
+
+    assert result["status"] == "already_processed"
+    assert result["selected_count"] == 0
+    assert result["skipped_details"] == [
+        {
+            "message_id": "m1",
+            "store_status": "failed",
+            "gmail_unread": True,
+            "reason": "failed_retry_disabled",
+        }
+    ]
+    assert not any("重跑 Gmail 仍为未读的本地已记录邮件" in line for line in statuses)
+
+
+@pytest.mark.asyncio
+async def test_auto_worker_live_run_clears_candidate_store_state_before_selection(
+    monkeypatch,
+    tmp_path,
+):
+    async def fake_fetch(config, *, max_results, query=None):
+        return [
+            {
+                "message_id": "m1",
+                "thread_id": "t1",
+                "project_label": "BlackHole",
+                "matched_labels": ["BlackHole"],
+                "internal_date": 100,
+            }
+        ]
+
+    class FakeGmail:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        async def get_unread_message_ids(self, message_ids):
+            return set(message_ids)
+
+        async def aclose(self):
+            return None
+
+    class FakeRunner:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def run(self, task, status_sink=None, stop_after_case_ids=None, **kwargs):
+            assert "确认正式处理" in task
+            assert stop_after_case_ids == {"m1"}
+            return AgentRunResult(
+                answer="done",
+                live_run=True,
+                case_states=[
+                    {
+                        "case_id": "m1",
+                        "status": "draft_created",
+                        "data": {"draft_id": "d1"},
+                    }
+                ],
+            )
+
+    store = ProcessedMessageStore(tmp_path / "manual.json")
+    store.record_seen([{"message_id": "m1", "thread_id": "t1"}])
+    data = store._read()
+    data["messages"]["m1"].update(
+        {
+            "status": "failed",
+            "retry_count": 3,
+            "error_message": "MaxIterationsError",
+            "agent_answer_preview": "old answer",
+            "labels_applied": ["无内容"],
+            "data": {"old": True},
+        }
+    )
+    store._write(data)
+
+    monkeypatch.setattr(auto_worker, "fetch_new_message_ids", fake_fetch)
+    monkeypatch.setattr(auto_worker, "GmailTools", FakeGmail)
+    monkeypatch.setattr(auto_worker, "SupportAgentRunner", FakeRunner)
+
+    statuses: list[str] = []
+    result = await auto_worker.run_once(
+        support_config=SupportAgentConfig(),
+        run_config=AgentRunConfig(),
+        store=store,
+        max_candidates=10,
+        max_new=1,
+        retry_failed=False,
+        max_retries=3,
+        live_run=True,
+        status_sink=statuses.append,
+    )
+
+    assert result["status"] == "draft_created"
+    assert result["selected_count"] == 1
+    assert result["outcomes"][0]["message_id"] == "m1"
+    stored = store._read()["messages"]["m1"]
+    assert stored["status"] == "draft_created"
+    assert stored["retry_count"] == 0
+    assert stored["error_message"] is None
+    assert any("正式处理前已清理本轮候选状态 1 封" in line for line in statuses)
 
 
 @pytest.mark.asyncio
@@ -1926,6 +2228,174 @@ async def test_auto_worker_calls_agent_with_natural_language_task(
 
 
 @pytest.mark.asyncio
+async def test_auto_worker_runs_selected_messages_one_at_a_time(
+    monkeypatch,
+    tmp_path,
+):
+    candidates = [
+        {
+            "message_id": "m1",
+            "thread_id": "t1",
+            "project_label": "BlackHole",
+        },
+        {
+            "message_id": "m2",
+            "thread_id": "t2",
+            "project_label": "BusFever",
+        },
+        {
+            "message_id": "m3",
+            "thread_id": "t3",
+            "project_label": "BlackHole",
+        },
+    ]
+    calls: list[dict[str, object]] = []
+
+    async def fake_fetch(*args, **kwargs):
+        return candidates
+
+    class FakeTrace:
+        def __init__(self, *, run_id):
+            self.run_id = run_id
+            self.log_path = tmp_path / "traces" / f"{run_id}.jsonl"
+
+        def message(self, message):
+            pass
+
+    class FakeRunner:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def run(self, task, status_sink=None, stop_after_case_ids=None, run_trace=None):
+            call = {
+                "task": task,
+                "stop_after_case_ids": set(stop_after_case_ids or set()),
+                "trace_path": str(run_trace.log_path),
+            }
+            calls.append(call)
+            message_id = next(iter(call["stop_after_case_ids"]))
+            return AgentRunResult(
+                answer=f"done {message_id}",
+                live_run=False,
+                case_states=[
+                    {
+                        "case_id": message_id,
+                        "status": "draft_created",
+                        "data": {"draft_id": f"d-{message_id}"},
+                    }
+                ],
+            )
+
+    monkeypatch.setattr(auto_worker, "fetch_new_message_ids", fake_fetch)
+    monkeypatch.setattr(auto_worker, "SupportAgentRunner", FakeRunner)
+    monkeypatch.setattr(auto_worker, "RunTrace", FakeTrace)
+    config = SupportAgentConfig(
+        state=StateConfig(processed_store_path=str(tmp_path / "processed.json")),
+        notify=NotifyConfig(mode="file", output_dir=str(tmp_path / "handoffs")),
+    )
+    store = ProcessedMessageStore(config.state.processed_store_path)
+
+    result = await auto_worker.run_once(
+        support_config=config,
+        run_config=AgentRunConfig(),
+        store=store,
+        max_candidates=5,
+        max_new=3,
+        retry_failed=False,
+        max_retries=3,
+        live_run=False,
+        status_sink=lambda _text: None,
+    )
+
+    assert [call["stop_after_case_ids"] for call in calls] == [
+        {"m1"},
+        {"m2"},
+        {"m3"},
+    ]
+    assert "message_id=m1" in calls[0]["task"]
+    assert "message_id=m2" not in calls[0]["task"]
+    assert "message_id=m2" in calls[1]["task"] and "message_id=m1" not in calls[1]["task"]
+    assert "message_id=m3" in calls[2]["task"] and "message_id=m2" not in calls[2]["task"]
+    assert result["status"] == "draft_created"
+    assert result["selected_count"] == 3
+    assert [outcome["draft_id"] for outcome in result["outcomes"]] == ["d-m1", "d-m2", "d-m3"]
+    assert all(outcome["trace_path"].endswith(f"{outcome['message_id']}.jsonl") for outcome in result["outcomes"])
+
+
+@pytest.mark.asyncio
+async def test_auto_worker_continues_after_single_message_failure(
+    monkeypatch,
+    tmp_path,
+):
+    candidates = [
+        {"message_id": "m1", "thread_id": "t1", "project_label": "BlackHole"},
+        {"message_id": "m2", "thread_id": "t2", "project_label": "BlackHole"},
+    ]
+
+    async def fake_fetch(*args, **kwargs):
+        return candidates
+
+    class FakeTrace:
+        def __init__(self, *, run_id):
+            self.run_id = run_id
+            self.log_path = tmp_path / f"{run_id}.jsonl"
+
+        def message(self, message):
+            pass
+
+    class FakeRunner:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def run(self, task, status_sink=None, stop_after_case_ids=None, run_trace=None):
+            message_id = next(iter(stop_after_case_ids))
+            if message_id == "m1":
+                raise RuntimeError("model loop exhausted")
+            return AgentRunResult(
+                answer="second done",
+                live_run=False,
+                case_states=[
+                    {
+                        "case_id": "m2",
+                        "status": "human_review",
+                        "data": {"human_review_reason": "needs review"},
+                    }
+                ],
+            )
+
+    monkeypatch.setattr(auto_worker, "fetch_new_message_ids", fake_fetch)
+    monkeypatch.setattr(auto_worker, "SupportAgentRunner", FakeRunner)
+    monkeypatch.setattr(auto_worker, "RunTrace", FakeTrace)
+    config = SupportAgentConfig(
+        state=StateConfig(processed_store_path=str(tmp_path / "processed.json")),
+        notify=NotifyConfig(mode="file", output_dir=str(tmp_path / "handoffs")),
+    )
+    store = ProcessedMessageStore(config.state.processed_store_path)
+
+    result = await auto_worker.run_once(
+        support_config=config,
+        run_config=AgentRunConfig(),
+        store=store,
+        max_candidates=5,
+        max_new=2,
+        retry_failed=False,
+        max_retries=3,
+        live_run=False,
+        status_sink=lambda _text: None,
+    )
+
+    assert result["status"] == "failed"
+    assert [outcome["status"] for outcome in result["outcomes"]] == [
+        "failed",
+        "human_review",
+    ]
+    assert result["outcomes"][0]["error_message"] == "RuntimeError: model loop exhausted"
+    assert result["outcomes"][1]["human_review_reason"] == "needs review"
+    assert (tmp_path / "handoffs" / "m1.txt").exists()
+    assert not (tmp_path / "handoffs" / "m2.txt").exists()
+
+
+@pytest.mark.asyncio
 async def test_auto_worker_skipped_no_content_reports_correct_status_text(
     monkeypatch,
     tmp_path,
@@ -2087,3 +2557,116 @@ async def test_auto_worker_runner_exception_escalates_to_human(
     assert result["failure_notifications"][0]["notification"]["mode"] == "file"
     assert (tmp_path / "handoffs" / "m1.txt").exists()
     assert store._read()["messages"]["m1"]["status"] == "failed"
+
+
+@pytest.mark.asyncio
+async def test_auto_worker_recover_stale_processing_command(monkeypatch, tmp_path, capsys):
+    store_path = tmp_path / "processed.json"
+    store = ProcessedMessageStore(store_path)
+    store.record_seen([{"message_id": "m1", "thread_id": "t1"}])
+    data = store._read()
+    data["messages"]["m1"].update(
+        {
+            "status": "processing",
+            "agent_run_id": "old-run",
+            "last_processed_at": "2026-07-01T00:00:00+00:00",
+        }
+    )
+    store._write(data)
+
+    monkeypatch.setattr(
+        auto_worker,
+        "parse_args",
+        lambda: SimpleNamespace(
+            config="config.toml",
+            profile=None,
+            backend=None,
+            model=None,
+            gguf_path=None,
+            gguf=None,
+            base_url=None,
+            api_key=None,
+            api_key_env=None,
+            api_key_file=None,
+            llamafile_mode=None,
+            timeout_seconds=None,
+            budget_tokens=None,
+            max_iterations=None,
+            block_db_in_dry_run=False,
+            readiness_check=False,
+            readiness_include_discovery=False,
+            recover_stale_processing=True,
+            stale_after_minutes=60,
+            recover_stale_status="failed",
+        ),
+    )
+    monkeypatch.setattr(
+        auto_worker,
+        "load_config",
+        lambda path: SupportAgentConfig(
+            state=StateConfig(processed_store_path=str(store_path)),
+        ),
+    )
+    monkeypatch.setattr(
+        auto_worker,
+        "datetime",
+        SimpleNamespace(
+            now=lambda tz=None: datetime(2026, 7, 1, 2, 0, tzinfo=timezone.utc),
+        ),
+    )
+
+    await auto_worker.main_async()
+
+    output = capsys.readouterr().out
+    assert "Recovered stale processing records: 1" in output
+    data = store._read()
+    assert data["messages"]["m1"]["status"] == "failed"
+    assert data["runs"][-1]["payload"]["mode"] == "recover_stale_processing"
+
+
+def test_message_observer_does_not_enrich_cross_case_save_state():
+    case_states: list[dict[str, object]] = []
+    observer = build_message_observer(
+        status_sink=lambda _text: None,
+        case_states=case_states,
+        stop_after_case_ids={"expected"},
+    )
+
+    observer(
+        Message(
+            role=MessageRole.TOOL,
+            content=json.dumps(
+                {
+                    "project": "BlackHole",
+                    "case_type": "bug",
+                    "recommended_labels": ["BlackHole/bug反馈"],
+                    "detected_language": "en",
+                }
+            ),
+            metadata=MessageMeta(type=MessageType.TOOL_RESULT),
+            tool_name="extract_feedback_claim",
+        )
+    )
+    observer(
+        Message(
+            role=MessageRole.TOOL,
+            content=json.dumps(
+                {
+                    "case_id": "other",
+                    "status": "human_review",
+                    "data": {"issue_type": "no_content"},
+                }
+            ),
+            metadata=MessageMeta(type=MessageType.TOOL_RESULT),
+            tool_name="save_case_state",
+        )
+    )
+
+    assert case_states == [
+        {
+            "case_id": "other",
+            "status": "human_review",
+            "data": {"issue_type": "no_content"},
+            "dry_run": False,
+        }
+    ]

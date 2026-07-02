@@ -230,6 +230,59 @@ def test_extract_feedback_claim_ads_after_purchase_falls_back_to_payment_label()
     assert result["label_selection_reason"] == "fallback_payment_suffix"
 
 
+def test_extract_feedback_claim_no_content_uses_global_label_without_project_child():
+    decisions = DecisionTools(
+        SupportPolicyConfig(
+            label_suffix_by_case_type={
+                "no_content": ["无内容"],
+                "crash_or_freeze": ["崩溃卡死"],
+            }
+        )
+    )
+
+    result = decisions.extract_feedback_claim(
+        project="BusFever",
+        case_type="no_content",
+        summary="No actual feedback text found after form prefix",
+        available_label_names=["BusFever", "无内容", "BlackHole/崩溃卡死"],
+    )
+
+    assert result["recommended_labels"] == ["无内容"]
+    assert result["label_selection_reason"] == "global_no_content"
+
+
+def test_extract_feedback_claim_rejects_no_content_when_question_has_freecash_issue():
+    decisions = DecisionTools(
+        SupportPolicyConfig(
+            label_suffix_by_case_type={
+                "no_content": ["无内容"],
+                "freecash_sync_misunderstanding": ["freecash同步问题"],
+            }
+        )
+    )
+
+    result = decisions.extract_feedback_claim(
+        project="BlackHole",
+        case_type="no_content",
+        summary="Player says Freecash task was completed but not compensated.",
+        language_source_text=(
+            "platform:Android ver:1.17.1 userid:924e44ff832d0148\n"
+            "I need some help. My question is: i have been playing your game "
+            "through Freecash and i completed task n was not compensated.."
+            "freecash is saying because you did not approve of me showing proof "
+            "i completed the level tasks I needed.. i would like to be re reviewed "
+            "n see that I did..i may not have had the exact day but I completed "
+            "tasks in alotted time like required"
+        ),
+        available_label_names=["BlackHole", "BlackHole/freecash同步问题", "无内容"],
+    )
+
+    assert result["recommended_labels"] == []
+    assert result["label_selection_reason"] == "rejected_substantive_feedback"
+    assert result["no_content_rejected"] is True
+    assert "non-no_content" in " ".join(result["next_steps"])
+
+
 def test_decide_support_action_maps_remove_ads_order_request_alias():
     decisions = DecisionTools(SupportPolicyConfig())
 

@@ -13,6 +13,7 @@ from player_support_agent.tools.gmail_tools import (
     build_sender_feedback_query,
     normalize_sender_email,
 )
+from player_support_agent.tools.tool_shared_state import ToolSharedState
 from forge.errors import ToolResolutionError
 
 
@@ -155,6 +156,103 @@ async def test_label_lookup_allows_existing_project_label_without_static_allowli
     }
 
     assert await gmail._label_ids_for_names(["BlackHole/bug反馈"]) == ["Label_1"]
+
+
+@pytest.mark.asyncio
+async def test_apply_existing_labels_rejects_empty_label_list_without_fallback(
+    monkeypatch,
+):
+    shared_state = ToolSharedState()
+    shared_state.set_last_extract_claim({"recommended_labels": ["无内容"]})
+    gmail = GmailTools(
+        GmailConfig(
+            access_token="test-token",
+            allowed_label_names=["无内容"],
+        ),
+        shared_state=shared_state,
+    )
+    gmail._label_cache = {"无内容": "Label_NoContent"}
+
+    async def fail_request(*args, **kwargs):
+        raise AssertionError("empty labels must not write Gmail using fallback labels")
+
+    monkeypatch.setattr(gmail, "_request", fail_request)
+
+    result = await gmail.apply_existing_gmail_labels(["m1"], [])
+
+    assert result["applied_labels"] == []
+    assert result["partial_success"] is False
+    assert result["rejected_labels"][0]["error"] == "label_names is required"
+
+
+@pytest.mark.asyncio
+async def test_apply_existing_labels_rejects_mismatch_without_fallback(monkeypatch):
+    shared_state = ToolSharedState()
+    shared_state.set_last_extract_claim(
+        {"recommended_labels": ["BlackHole", "BlackHole/咨询其他"]}
+    )
+    gmail = GmailTools(
+        GmailConfig(
+            access_token="test-token",
+            project_label_names=["BlackHole"],
+            allow_existing_project_labels=True,
+        ),
+        shared_state=shared_state,
+    )
+    gmail._label_cache = {
+        "BlackHole": "Label_Project",
+        "BlackHole/一般问题": "Label_Wrong",
+        "BlackHole/咨询其他": "Label_Recommended",
+    }
+    gmail._label_details = {
+        name: {"id": label_id, "name": name, "type": "user"}
+        for name, label_id in gmail._label_cache.items()
+    }
+
+    async def fail_request(*args, **kwargs):
+        raise AssertionError("mismatched labels must not be corrected and written")
+
+    monkeypatch.setattr(gmail, "_request", fail_request)
+
+    result = await gmail.apply_existing_gmail_labels(["m1"], ["BlackHole/一般问题"])
+
+    assert result["applied_labels"] == []
+    assert result["partial_success"] is False
+    assert result["recommended_labels"] == ["BlackHole", "BlackHole/咨询其他"]
+    assert result["rejected_labels"][0]["error"] == (
+        "label_names must exactly match extract_feedback_claim.recommended_labels"
+    )
+
+
+@pytest.mark.asyncio
+async def test_apply_existing_labels_rejects_when_extract_recommended_no_labels(
+    monkeypatch,
+):
+    shared_state = ToolSharedState()
+    shared_state.set_last_extract_claim(
+        {"case_type": "no_content", "recommended_labels": []}
+    )
+    gmail = GmailTools(
+        GmailConfig(
+            access_token="test-token",
+            allowed_label_names=["无内容"],
+        ),
+        shared_state=shared_state,
+    )
+    gmail._label_cache = {"无内容": "Label_NoContent"}
+
+    async def fail_request(*args, **kwargs):
+        raise AssertionError("labels must not be applied when extract recommended none")
+
+    monkeypatch.setattr(gmail, "_request", fail_request)
+
+    result = await gmail.apply_existing_gmail_labels(["m1"], ["无内容"])
+
+    assert result["applied_labels"] == []
+    assert result["partial_success"] is False
+    assert result["rejected_labels"][0]["error"] == (
+        "extract_feedback_claim.recommended_labels is empty; refusing to apply labels"
+    )
 
 
 def test_project_labels_from_thread_labels_ignores_non_project_user_labels():

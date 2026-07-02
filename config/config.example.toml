@@ -155,6 +155,14 @@ output_dir = "var/handoffs"
 high_risk_case_types = ["ban_appeal", "chargeback", "refund", "payment", "account_security", "compensation"]
 auto_draft_confidence_threshold = 0.85
 human_review_confidence_threshold = 0.60
+auto_draft_without_logs_case_types = [
+  "ad_issue",
+  "feature_request",
+  "save_transfer",
+  "gameplay_misunderstanding",
+  "general_question",
+  "account_binding",
+]
 default_language = "zh-CN"
 
 [policy.label_by_case_type]
@@ -177,6 +185,7 @@ account_binding = ["账号绑定"]
 payment = ["内购问题", "内购"]
 ads_after_purchase = ["去广告后有广告"]
 pass_purchase_misunderstanding = ["pass购买误解"]
+freecash_sync_misunderstanding = ["freecash同步问题", "积分墙同步问题"]
 other = ["其他"]
 
 [knowledge]

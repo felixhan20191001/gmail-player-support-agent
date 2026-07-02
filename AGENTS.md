@@ -64,12 +64,20 @@ For changes under `src/player_support_agent` and `tests/unit/`:
   sender-filter run, automation worker, and future discovery-to-run features)
   must go through `ProcessedMessageStore.select_candidates_for_run` after
   Gmail UNREAD state is fetched for the discovered candidates.
-- Gmail UNREAD is the source of truth for whether a message still needs work:
-  if Gmail still marks a candidate UNREAD, select it for processing even when
-  the local store already has a terminal or `failed` outcome.
-- Only Gmail READ candidates with an existing terminal or `failed` store record
-  may be skipped as already handled. The sole exception is `processing`, which
-  remains skipped to avoid overlapping runs on the same message.
+- Gmail UNREAD is the source of truth for successful terminal outcomes: if
+  Gmail still marks a terminal candidate UNREAD, select it for processing so the
+  worker can clear unfinished Gmail state.
+- `failed` store records are the exception. Do not automatically reprocess a
+  previously failed message just because Gmail still marks it UNREAD; skip it
+  unless the caller explicitly enables failed-message retry.
+- A newly started live/formal mail-processing run may clear the current
+  discovered candidates' local processing state before selection, so previously
+  failed unread mail can be retried after system changes. Continuous automation
+  sessions should do this only on the first cycle of the session, not on every
+  drain iteration.
+- Only Gmail READ candidates with an existing terminal store record may be
+  skipped as already handled. `processing` remains skipped to avoid overlapping
+  runs on the same message.
 - Do not add entrypoint-specific dedupe rules that skip UNREAD mail because of
   local terminal state. New features must reuse the shared selection helper and
   UNREAD lookup rather than reimplementing store filters.

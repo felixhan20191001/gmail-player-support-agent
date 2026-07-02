@@ -15,6 +15,7 @@ from .gmail_tools import GmailTools
 from .notify_tools import NotifyTools
 from .rule_tools import RuleTools
 from .state_tools import StateTools
+from .tool_shared_state import ToolSharedState
 
 
 class EmptyParams(BaseModel):
@@ -255,13 +256,14 @@ def _tool(
 def build_tool_defs(config: SupportAgentConfig) -> dict[str, ToolDef]:
     """Build the MVP player-support ToolDef map for a Forge Workflow."""
 
-    gmail = GmailTools(config.gmail)
+    shared_state = ToolSharedState()
+    gmail = GmailTools(config.gmail, shared_state=shared_state)
     ch = ClickHouseTools(
         config.clickhouse,
         remove_ads_investigation_path=config.knowledge.remove_ads_investigation_path,
         coin_frenzy_investigation_path=config.knowledge.coin_frenzy_investigation_path,
     )
-    decisions = DecisionTools(config.policy)
+    decisions = DecisionTools(config.policy, shared_state=shared_state)
     notify = NotifyTools(config.notify)
     rules = RuleTools(
         config.knowledge,

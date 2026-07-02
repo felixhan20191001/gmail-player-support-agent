@@ -13,6 +13,7 @@ from forge.errors import ToolResolutionError
 
 from ..paths import resolve_project_path
 from .config import KnowledgeConfig
+from .feedback_text import has_substantive_feedback_text
 
 
 SAFE_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
@@ -21,6 +22,9 @@ _TEMPLATE_LANGUAGE_ALIASES = {
     "english": "en",
     "en-us": "en",
     "en-gb": "en",
+    "dutch": "nl",
+    "nederlands": "nl",
+    "nl-nl": "nl",
     "chinese": "zh-CN",
     "zh": "zh-CN",
     "zh-cn": "zh-CN",
@@ -287,9 +291,15 @@ class RuleTools:
 
         limit = max(1, min(max_rules or self.config.max_rules, 20))
         normalized_text = email_text.casefold()
+        no_content_rejected = (
+            case_type == "no_content"
+            and has_substantive_feedback_text(email_text)
+        )
         matches: list[dict[str, Any]] = []
 
         for rule in self._load_rules(project):
+            if no_content_rejected and rule.id == "empty_feedback_apply_no_content_label":
+                continue
             project_match = not rule.projects or project in rule.projects
             if not project_match:
                 continue
@@ -354,7 +364,15 @@ class RuleTools:
         )
         recommended = _recommended_actionable_rule(limited_matches)
         guidance: str | None = None
-        if (
+        if no_content_rejected:
+            guidance = (
+                "case_type=no_content was rejected because email_text contains "
+                "substantive player feedback after the form marker. Do not apply "
+                "the 无内容 label. Re-run extract_feedback_claim once with a "
+                "specific non-no_content case type that matches the actual complaint, "
+                "then continue with the normal draft or handoff workflow."
+            )
+        elif (
             recommended
             and has_strong_match
             and not recommended.get("requires_logs")
@@ -397,6 +415,7 @@ class RuleTools:
             "matched_rules": limited_matches,
             "has_strong_match": has_strong_match,
             "recommended_rule_id": recommended["id"] if recommended else None,
+            "no_content_rejected": no_content_rejected,
             "email_text_reminder": _EMAIL_TEXT_REMINDER,
             "guidance": guidance,
             "legacy_templates_path": str(self._legacy_templates_path()),
