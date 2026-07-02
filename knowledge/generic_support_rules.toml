@@ -133,10 +133,36 @@ instructions = [
 
 [[rules]]
 id = "vague_issue_details_request"
-case_types = ["bug", "other", "general_question", "gameplay_misunderstanding"]
-triggers = ["有问题", "不能玩", "出错", "异常", "问题", "bug", "error", "problem", "help", "need help"]
+case_types = ["bug", "other", "general_question", "gameplay_misunderstanding", "feature_request"]
+triggers = [
+  "有问题",
+  "不能玩",
+  "出错",
+  "异常",
+  "问题",
+  "不喜欢新版本",
+  "新版本不好",
+  "bug",
+  "error",
+  "problem",
+  "help",
+  "need help",
+  "new version",
+  "latest version",
+  "didn't like",
+  "did not like",
+  "don't like",
+  "do not like",
+  "dislike",
+  "not happy",
+  "bad update",
+  "no me gustó",
+  "no me gusto",
+  "nueva versión",
+  "nueva version",
+]
 priority = 20
-summary = "The player reports a problem but the exact issue is unclear; ask for screenshots, steps, and location."
+summary = "The player reports a vague problem or dissatisfaction, including unclear dislike of a new version/update; ask for screenshots, steps, and location."
 requires_logs = false
 action = "draft_reply"
 human_review = false
@@ -623,7 +649,25 @@ instructions = [
 [[rules]]
 id = "delete_account_data_no_account"
 case_types = ["account_binding", "general_question"]
-triggers = ["删除账号", "删除数据", "账号数据", "重玩", "delete account", "delete data", "restart game"]
+triggers = [
+  "删除账号",
+  "删除数据",
+  "账号数据",
+  "重玩",
+  "delete account",
+  "delete data",
+  "restart game",
+  "delete this from my phone",
+  "delete this from my iphone",
+  "delete the app",
+  "delete the game",
+  "remove from my phone",
+  "remove from my iphone",
+  "uninstall app",
+  "uninstall the app",
+  "uninstall game",
+  "uninstall the game",
+]
 priority = 50
 summary = "There is no cloud account system; data is local and can be reset by reinstalling or clearing app data, with save-loss warning."
 requires_logs = false
@@ -693,7 +737,18 @@ instructions = [
 [[rules]]
 id = "missing_userid_request"
 case_types = ["bug", "payment", "ad_issue", "lost_save", "other"]
-triggers = ["userid", "user id", "用户ID", "用户 id", "没有id", "缺少id"]
+triggers = [
+  "没有id",
+  "缺少id",
+  "没有用户id",
+  "缺少用户id",
+  "missing userid",
+  "missing user id",
+  "no userid",
+  "no user id",
+  "without userid",
+  "without user id",
+]
 priority = 65
 summary = "The email lacks user ID needed for lookup; ask the player to contact through the in-game support button."
 requires_logs = false
@@ -716,6 +771,16 @@ triggers = [
   "没收到",
   "扣款",
   "payment missing",
+  "paid but did not receive",
+  "paid but didn't receive",
+  "charged but not received",
+  "charged but never received",
+  "took the dollar",
+  "never gave me my package",
+  "package was not delivered",
+  "package not delivered",
+  "purchase was not delivered",
+  "purchase not delivered",
   "not received",
   "didn't receive",
   "did not receive",

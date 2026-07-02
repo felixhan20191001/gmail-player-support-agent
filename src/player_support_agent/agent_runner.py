@@ -32,6 +32,7 @@ from .paths import default_config_path
 from .run_trace import RunTrace
 from .tools.config import ModelConfig, StateConfig, SupportAgentConfig, load_config
 from .tools.state_tools import StateTools
+from .tools.forge_tools import ToolSurface
 from .workflows import build_multi_project_chat_workflow, build_multi_project_workflow
 
 
@@ -898,6 +899,7 @@ class SupportAgentRunner:
         status_sink: StatusSink | None = None,
         stop_after_case_ids: set[str] | None = None,
         run_trace: RunTrace | None = None,
+        auto_surface: ToolSurface = "auto",
     ) -> AgentRunResult:
         live_run = LIVE_CONFIRMATION in user_input
         auto_mode = stop_after_case_ids is not None
@@ -907,6 +909,7 @@ class SupportAgentRunner:
                 self.support_config,
                 dry_run=not live_run,
                 allow_db_in_dry_run=self.run_config.allow_db_in_dry_run,
+                surface=auto_surface,
             )
         else:
             workflow = build_multi_project_chat_workflow(
@@ -1011,6 +1014,7 @@ class SupportAgentRunner:
         status_sink: StatusSink | None = None,
         stop_after_case_ids: set[str] | None = None,
         run_trace: RunTrace | None = None,
+        auto_surface: ToolSurface = "auto",
     ) -> AgentRunResult:
         return asyncio.run(
             self.run(
@@ -1019,5 +1023,6 @@ class SupportAgentRunner:
                 status_sink=status_sink,
                 stop_after_case_ids=stop_after_case_ids,
                 run_trace=run_trace,
+                auto_surface=auto_surface,
             )
         )

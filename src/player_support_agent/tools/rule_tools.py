@@ -60,6 +60,11 @@ def _recommended_actionable_rule(matches: list[dict[str, Any]]) -> dict[str, Any
     for item in matches:
         if item.get("policy_only"):
             continue
+        if not item.get("weak_match"):
+            return item
+    for item in matches:
+        if item.get("policy_only"):
+            continue
         if item.get("reply_template") or item.get("action") == "apply_label_only":
             return item
     return matches[0] if matches else None
@@ -114,12 +119,14 @@ class RuleTools:
         project_label_names: list[str] | None = None,
         clickhouse_project_case_type_tables: dict[str, dict[str, list[str]]] | None = None,
         label_suffix_by_case_type: dict[str, list[str]] | None = None,
+        compact_results: bool = False,
     ) -> None:
         self.config = config
         self.default_language = default_language
         self.project_label_names = project_label_names or []
         self.clickhouse_project_case_type_tables = clickhouse_project_case_type_tables or {}
         self.label_suffix_by_case_type = label_suffix_by_case_type or {}
+        self.compact_results = compact_results
 
     def _rules_path(self, project: str | None = None) -> Path:
         if project and project in self.config.project_rules_paths:
@@ -352,7 +359,14 @@ class RuleTools:
                 }
             )
 
-        matches.sort(key=lambda item: item["score"], reverse=True)
+        matches.sort(
+            key=lambda item: (
+                not item.get("policy_only"),
+                not item.get("weak_match"),
+                item["score"],
+            ),
+            reverse=True,
+        )
         limited_matches = matches[:limit]
         limited_ids = {item["id"] for item in limited_matches}
         for item in matches:
@@ -399,6 +413,18 @@ class RuleTools:
                 "proceed to assess_claim_credibility and decide_support_action without "
                 "re-calling get_relevant_support_rules."
             )
+        result: dict[str, Any] = {
+            "project": project,
+            "case_type": case_type,
+            "matched_rules": limited_matches,
+            "has_strong_match": has_strong_match,
+            "recommended_rule_id": recommended["id"] if recommended else None,
+            "no_content_rejected": no_content_rejected,
+            "guidance": guidance,
+        }
+        if self.compact_results:
+            return result
+
         legacy_limit = max(3, min(limit, 8))
         legacy_matches = self._match_legacy_reply_templates(
             case_type=case_type,
@@ -407,20 +433,16 @@ class RuleTools:
             include_case_defaults=include_case_defaults,
             limit=legacy_limit,
         )
-        return {
-            "project": project,
-            "case_type": case_type,
-            "rules_path": str(self._rules_path(project)),
-            "rules_paths": [str(path) for path in self._rules_paths(project)],
-            "matched_rules": limited_matches,
-            "has_strong_match": has_strong_match,
-            "recommended_rule_id": recommended["id"] if recommended else None,
-            "no_content_rejected": no_content_rejected,
-            "email_text_reminder": _EMAIL_TEXT_REMINDER,
-            "guidance": guidance,
-            "legacy_templates_path": str(self._legacy_templates_path()),
-            "matched_legacy_templates": legacy_matches,
-        }
+        result.update(
+            {
+                "rules_path": str(self._rules_path(project)),
+                "rules_paths": [str(path) for path in self._rules_paths(project)],
+                "email_text_reminder": _EMAIL_TEXT_REMINDER,
+                "legacy_templates_path": str(self._legacy_templates_path()),
+                "matched_legacy_templates": legacy_matches,
+            }
+        )
+        return result
 
     def get_support_knowledge_summary(self, project: str | None = None) -> dict[str, Any]:
         """Return a safe summary of configured rules and templates."""

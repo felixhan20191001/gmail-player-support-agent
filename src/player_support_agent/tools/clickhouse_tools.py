@@ -72,6 +72,7 @@ class ClickHouseTools:
         *,
         remove_ads_investigation_path: str | None = None,
         coin_frenzy_investigation_path: str | None = None,
+        compact_results: bool = False,
     ) -> None:
         self.config = config
         self.remove_ads_investigation_path = (
@@ -80,6 +81,7 @@ class ClickHouseTools:
         self.coin_frenzy_investigation_path = (
             coin_frenzy_investigation_path or "knowledge/coin_frenzy_investigation.toml"
         )
+        self.compact_results = compact_results
 
     def _auth(self) -> tuple[str, str] | None:
         username = self.config.resolve_username()
@@ -902,7 +904,10 @@ class ClickHouseTools:
             "last_event_time": max(times) if times else None,
             "event_column": event_column,
             "event_counts": dict(Counter(events).most_common(20)),
-            "sample_rows": [_compact_row(row) for row in rows[:5]],
+            "sample_rows": [
+                _compact_row(row)
+                for row in rows[: (2 if self.compact_results else 5)]
+            ],
             "raw_rows_omitted": True,
         }
 

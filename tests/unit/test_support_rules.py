@@ -91,6 +91,122 @@ instructions = ["Check product_id first."]
     assert set(result["matched_rules"][0]["trigger_hits"]) == {"没到账", "pass"}
 
 
+def test_relevant_support_rules_routes_vague_new_version_dislike_to_details_request():
+    tools = RuleTools(KnowledgeConfig())
+    email_text = "No me gustó la nueva versión\n\nNo me gustó la nueva versión"
+
+    for case_type in ["general_question", "feature_request", "other"]:
+        result = tools.get_relevant_support_rules(
+            project="BusFever",
+            case_type=case_type,
+            email_text=email_text,
+            include_case_defaults=True,
+        )
+
+        assert result["matched_rules"][0]["id"] == "vague_issue_details_request"
+        assert result["recommended_rule_id"] == "vague_issue_details_request"
+        assert result["has_strong_match"] is True
+        assert result["matched_rules"][0]["trigger_hits"]
+
+
+def test_relevant_support_rules_routes_package_not_delivered_payment_to_handoff():
+    tools = RuleTools(KnowledgeConfig())
+    email_text = (
+        "platform:Android ver:1.17.1 userid:937eac68ca1dfc7c\n"
+        "I need some help. My question is: I just purchased one of your packages "
+        "for 99 cent for 5,000 coins and stuff it took the dollar but it never "
+        "gave me my package and I'm trying to see what's going on"
+    )
+
+    result = tools.get_relevant_support_rules(
+        project="BlackHole",
+        case_type="payment",
+        email_text=email_text,
+        include_case_defaults=True,
+    )
+
+    assert result["matched_rules"][0]["id"] == "payment_issue_handoff"
+    assert result["recommended_rule_id"] == "payment_issue_handoff"
+    assert result["has_strong_match"] is True
+    assert "missing_userid_request" not in {
+        rule["id"] for rule in result["matched_rules"][:3]
+    }
+
+
+def test_relevant_support_rules_routes_iphone_delete_question_to_delete_data_rule():
+    tools = RuleTools(KnowledgeConfig())
+    email_text = (
+        "platform:iOS ver:1.19.1 userid:dfd62c3e90a1135e\n"
+        "I need some help. My question is: how do I delete this from my phone?\n"
+        "Thanks\n\nSent from my iPhone"
+    )
+
+    result = tools.get_relevant_support_rules(
+        project="BusFever",
+        case_type="general_question",
+        email_text=email_text,
+        include_case_defaults=True,
+    )
+
+    assert result["matched_rules"][0]["id"] == "delete_account_data_no_account"
+    assert result["recommended_rule_id"] == "delete_account_data_no_account"
+    assert result["has_strong_match"] is True
+    assert result["matched_rules"][0]["trigger_hits"]
+
+
+def test_get_reply_template_has_english_delete_account_data_template():
+    tools = RuleTools(KnowledgeConfig())
+
+    result = tools.get_reply_template(
+        "delete_account_data_no_account",
+        project="BusFever",
+        language="en",
+    )
+
+    assert result["language"] == "en"
+    assert result["language_fallback"] is False
+    assert "delete the app" in result["body"].lower()
+    assert "save progress" in result["body"].lower()
+
+
+def test_compact_relevant_support_rules_omits_paths_and_legacy_templates(tmp_path: Path):
+    rules_path = tmp_path / "rules.toml"
+    rules_path.write_text(
+        """
+[[rules]]
+id = "feature_request_ack"
+case_types = ["feature_request"]
+triggers = ["timer"]
+priority = 100
+summary = "Acknowledge feature request."
+requires_logs = false
+reply_template = "feature_request_ack"
+instructions = ["Thank the player."]
+""".strip(),
+        encoding="utf-8",
+    )
+    tools = RuleTools(
+        KnowledgeConfig(rules_path=str(rules_path), templates_dir=str(tmp_path)),
+        compact_results=True,
+    )
+
+    result = tools.get_relevant_support_rules(
+        project="BlackHole",
+        case_type="feature_request",
+        email_text="please ease up with the timer",
+    )
+
+    assert result["matched_rules"][0]["id"] == "feature_request_ack"
+    assert result["recommended_rule_id"] == "feature_request_ack"
+    assert result["matched_rules"][0]["reply_template"] == "feature_request_ack"
+    assert "rules_path" not in result
+    assert "rules_paths" not in result
+    assert "legacy_templates_path" not in result
+    assert "matched_legacy_templates" not in result
+    assert "email_text_reminder" not in result
+    assert result["guidance"]
+
+
 def test_get_reply_template_uses_default_language(tmp_path: Path):
     template_dir = tmp_path / "zh-CN"
     template_dir.mkdir()

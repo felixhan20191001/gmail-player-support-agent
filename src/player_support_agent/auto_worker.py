@@ -487,6 +487,7 @@ async def run_once(
         task = build_auto_task(one_selected, live_run=live_run)
         if live_run and LIVE_CONFIRMATION not in task:
             raise RuntimeError("live auto task is missing the confirmation phrase")
+        auto_surface = "cleanup" if item.get("reprocess_gmail_unread") else "auto"
 
         try:
             result = await runner.run(
@@ -494,6 +495,7 @@ async def run_once(
                 status_sink=status_sink,
                 stop_after_case_ids={message_id},
                 run_trace=trace,
+                auto_surface=auto_surface,
             )
         except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"

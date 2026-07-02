@@ -253,15 +253,136 @@ def _tool(
     )
 
 
-def build_tool_defs(config: SupportAgentConfig) -> dict[str, ToolDef]:
+ToolSurface = Literal["chat", "auto", "cleanup"]
+
+
+AUTO_TOOL_NAMES = {
+    "read_email_thread",
+    "get_existing_gmail_labels",
+    "apply_existing_gmail_labels",
+    "mark_gmail_messages_read",
+    "create_gmail_draft",
+    "get_clickhouse_schema",
+    "validate_clickhouse_sql",
+    "query_clickhouse",
+    "summarize_behavior_logs",
+    "get_support_evidence_catalog",
+    "query_support_evidence",
+    "get_remove_ads_investigation_playbook",
+    "get_coin_frenzy_investigation_playbook",
+    "get_relevant_support_rules",
+    "get_project_support_profile",
+    "get_reply_template",
+    "extract_feedback_claim",
+    "resolve_player_identity",
+    "assess_remove_ads_log_evidence",
+    "assess_coin_frenzy_log_evidence",
+    "assess_claim_credibility",
+    "decide_support_action",
+    "review_reply_draft",
+    "create_human_handoff_summary",
+    "notify_human_support",
+    "save_case_state",
+}
+
+
+CLEANUP_TOOL_NAMES = {
+    "get_existing_gmail_labels",
+    "apply_existing_gmail_labels",
+    "mark_gmail_messages_read",
+    "save_case_state",
+}
+
+
+POST_DECISION_RESTART_TOOL_NAMES = {
+    "read_email_thread",
+    "get_existing_gmail_labels",
+    "get_project_support_profile",
+    "extract_feedback_claim",
+    "get_relevant_support_rules",
+    "resolve_player_identity",
+    "assess_claim_credibility",
+    "get_support_evidence_catalog",
+    "query_support_evidence",
+    "get_clickhouse_schema",
+    "validate_clickhouse_sql",
+    "query_clickhouse",
+    "summarize_behavior_logs",
+    "get_remove_ads_investigation_playbook",
+    "get_coin_frenzy_investigation_playbook",
+    "assess_remove_ads_log_evidence",
+    "assess_coin_frenzy_log_evidence",
+}
+
+
+POST_DECISION_NEXT_STEPS = (
+    "decide_support_action already returned. Do not restart read/extract/rules/"
+    "evidence tools. Continue the finish path now: optionally call "
+    "get_reply_template once if a template is still needed, then "
+    "review_reply_draft and create_gmail_draft for draft actions, or "
+    "create_human_handoff_summary and notify_human_support for human handoff, "
+    "then apply_existing_gmail_labels, mark_gmail_messages_read, and "
+    "save_case_state as the final tool call."
+)
+
+
+def _with_post_decision_guard(
+    name: str,
+    tool: ToolDef,
+    shared_state: ToolSharedState,
+) -> ToolDef:
+    original = tool.callable
+
+    def guarded_callable(*args, **kwargs):
+        if name in POST_DECISION_RESTART_TOOL_NAMES and shared_state.has_support_decision():
+            return {
+                "blocked": True,
+                "tool": name,
+                "error": "decide_support_action already returned for this case.",
+                "decision": shared_state.get_last_support_decision(),
+                "next_steps": POST_DECISION_NEXT_STEPS,
+            }
+        result = original(*args, **kwargs)
+        if name == "decide_support_action" and isinstance(result, dict):
+            shared_state.set_last_support_decision(result)
+        return result
+
+    return ToolDef(
+        spec=tool.spec,
+        callable=guarded_callable,
+        prerequisites=tool.prerequisites,
+    )
+
+
+def _with_auto_post_decision_guards(
+    tools: dict[str, ToolDef],
+    shared_state: ToolSharedState,
+) -> dict[str, ToolDef]:
+    return {
+        name: _with_post_decision_guard(name, tool, shared_state)
+        for name, tool in tools.items()
+    }
+
+
+def build_tool_defs(
+    config: SupportAgentConfig,
+    *,
+    surface: ToolSurface = "chat",
+) -> dict[str, ToolDef]:
     """Build the MVP player-support ToolDef map for a Forge Workflow."""
 
+    compact_results = surface in {"auto", "cleanup"}
     shared_state = ToolSharedState()
-    gmail = GmailTools(config.gmail, shared_state=shared_state)
+    gmail = GmailTools(
+        config.gmail,
+        shared_state=shared_state,
+        compact_results=compact_results,
+    )
     ch = ClickHouseTools(
         config.clickhouse,
         remove_ads_investigation_path=config.knowledge.remove_ads_investigation_path,
         coin_frenzy_investigation_path=config.knowledge.coin_frenzy_investigation_path,
+        compact_results=compact_results,
     )
     decisions = DecisionTools(config.policy, shared_state=shared_state)
     notify = NotifyTools(config.notify)
@@ -271,10 +392,11 @@ def build_tool_defs(config: SupportAgentConfig) -> dict[str, ToolDef]:
         project_label_names=config.gmail.project_label_names,
         clickhouse_project_case_type_tables=config.clickhouse.project_case_type_tables,
         label_suffix_by_case_type=config.policy.label_suffix_by_case_type,
+        compact_results=compact_results,
     )
     state = StateTools(config.state)
 
-    return {
+    tools = {
         "list_new_feedback_emails": _tool(
             "list_new_feedback_emails",
             "List Gmail player-feedback messages using the configured or supplied query.",
@@ -574,3 +696,11 @@ def build_tool_defs(config: SupportAgentConfig) -> dict[str, ToolDef]:
             state.write_audit_log,
         ),
     }
+    if surface == "chat":
+        return tools
+    if surface == "auto":
+        auto_tools = {name: tools[name] for name in tools if name in AUTO_TOOL_NAMES}
+        return _with_auto_post_decision_guards(auto_tools, shared_state)
+    if surface == "cleanup":
+        return {name: tools[name] for name in tools if name in CLEANUP_TOOL_NAMES}
+    raise ValueError(f"Unknown tool surface: {surface}")

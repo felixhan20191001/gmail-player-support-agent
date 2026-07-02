@@ -186,6 +186,8 @@ class GmailTools:
         self,
         config: GmailConfig,
         shared_state: ToolSharedState | None = None,
+        *,
+        compact_results: bool = False,
     ) -> None:
         self.config = config
         self._label_cache: dict[str, str] | None = None
@@ -194,6 +196,7 @@ class GmailTools:
         self._cached_access_token_expires_at: float = 0.0
         self._http_client: httpx.AsyncClient | None = None
         self._shared_state = shared_state or ToolSharedState()
+        self.compact_results = compact_results
 
     async def aclose(self) -> None:
         if self._http_client is not None:
@@ -681,12 +684,16 @@ class GmailTools:
             if "name" in label and "id" in label
         }
         project_labels_by_parent = self._project_labels_by_parent()
-        return {
-            "labels": labels,
+        result: dict[str, Any] = {
             "allowed_label_names": self.config.allowed_label_names,
             "project_parent_labels": sorted(project_labels_by_parent),
             "project_labels_by_parent": project_labels_by_parent,
         }
+        if self.compact_results:
+            result["label_names"] = sorted(self._label_cache)
+            return result
+        result["labels"] = labels
+        return result
 
     def _configured_or_discovered_project_parents(self) -> set[str]:
         if self.config.project_label_names:
@@ -990,7 +997,7 @@ class GmailTools:
         )
         data = resp.json()
 
-        return {
+        result: dict[str, Any] = {
             "draft_id": data.get("id"),
             "message_id": data.get("message", {}).get("id"),
             "thread_id": data.get("message", {}).get("threadId", resolved_thread_id),
@@ -998,12 +1005,14 @@ class GmailTools:
             "requested_to": requested_to,
             "recipient_source": recipient_source,
             "subject": subject,
-            "next_steps": [
+        }
+        if not self.compact_results:
+            result["next_steps"] = [
                 "Call apply_existing_gmail_labels with the exact label names from "
                 "extract_feedback_claim.recommended_labels.",
                 "Then call mark_gmail_messages_read with the same message_ids (to clear UNREAD so it is not re-processed).",
                 "Then call save_case_state with status=draft_created, this draft_id, "
                 "and the case message_id. Do not re-read or re-extract.",
                 "Never invent label names; only use those returned by extract_feedback_claim.",
-            ],
-        }
+            ]
+        return result

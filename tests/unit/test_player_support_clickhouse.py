@@ -570,3 +570,64 @@ async def test_query_clickhouse_returns_summary_not_raw_rows(monkeypatch):
     assert result["row_count"] == 2
     assert result["summary"]["raw_rows_omitted"] is True
     assert result["summary"]["event_counts"] == {"Purchase": 2}
+
+
+@pytest.mark.asyncio
+async def test_compact_query_clickhouse_limits_sample_rows(monkeypatch):
+    class FakeResponse:
+        text = "\n".join(
+            [
+                (
+                    '{"event_time":"2026-05-01T0%s:00:00Z",'
+                    '"user_id":"u1","event_name":"Purchase","amount":%s}'
+                )
+                % (index, index)
+                for index in range(1, 5)
+            ]
+        )
+
+        def raise_for_status(self):
+            return None
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def post(self, *args, **kwargs):
+            return FakeResponse()
+
+    monkeypatch.setattr(
+        "player_support_agent.tools.clickhouse_tools.httpx.AsyncClient",
+        FakeAsyncClient,
+    )
+    tools = ClickHouseTools(
+        ClickHouseConfig(
+            allowed_schema={
+                "numbercrush": ClickHouseTableConfig(
+                    columns=["event_time", "user_id", "event_name", "amount"],
+                    player_id_columns=["user_id"],
+                    time_column="event_time",
+                ),
+            },
+            case_type_tables={"payment": ["numbercrush"]},
+        ),
+        compact_results=True,
+    )
+
+    result = await tools.query_clickhouse(
+        sql=_valid_sql(),
+        player_id="u1",
+        time_window_start="2026-05-01T00:00:00+00:00",
+        time_window_end="2026-05-02T00:00:00+00:00",
+        case_type="payment",
+    )
+
+    assert result["row_count"] == 4
+    assert result["summary"]["raw_rows_omitted"] is True
+    assert len(result["summary"]["sample_rows"]) == 2

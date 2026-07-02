@@ -181,8 +181,6 @@ main() {
     exit 1
   fi
 
-  require_cmd curl
-
   local runtime
   runtime="$(choose_runtime)"
   echo
@@ -213,21 +211,21 @@ main() {
     echo "使用云模型: ${CLOUD_MODEL}"
     echo "Base URL: ${CLOUD_BASE_URL}"
   else
-    start_llama_server
     web_args+=(
       --backend llamaserver
       --base-url "$(llama_base_url)"
       --gguf "${GGUF_PATH}"
       --llamafile-mode prompt
     )
-    echo "使用本地模型: ${GGUF_PATH}"
+    echo "使用本地模型配置: ${GGUF_PATH}"
+    echo "llama-server 将由 WebUI 启动并托管: $(llama_base_url)"
   fi
 
   ensure_web_port_free
 
   echo
   echo "启动 Web 控制台: http://${WEB_HOST}:${WEB_PORT}"
-  echo "按 Ctrl+C 退出（本地模式会同时停止本次脚本启动的 llama-server）"
+  echo "按 Ctrl+C 退出（本地模式会同时停止本次 WebUI 启动的 llama-server）"
   echo
   exec "${WEB_BIN}" "${web_args[@]}"
 }

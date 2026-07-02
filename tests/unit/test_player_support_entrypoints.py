@@ -65,6 +65,115 @@ def test_auto_workflow_requires_assess_before_decide():
     )
 
 
+def test_auto_workflow_uses_smaller_tool_surface_than_chat():
+    auto_workflow = workflows.build_multi_project_workflow(SupportAgentConfig())
+    chat_workflow = workflows.build_multi_project_chat_workflow(SupportAgentConfig())
+
+    auto_tools = set(auto_workflow.tools)
+    chat_tools = set(chat_workflow.tools)
+
+    assert auto_tools < chat_tools
+    assert "respond" in chat_tools
+    assert "respond" not in auto_tools
+    for chat_only in {
+        "list_new_feedback_emails",
+        "list_unread_inbox_emails",
+        "list_unread_project_emails",
+        "search_legacy_reply_templates",
+        "get_support_knowledge_summary",
+        "get_support_coverage_summary",
+        "get_case_state",
+        "write_audit_log",
+    }:
+        assert chat_only in chat_tools
+        assert chat_only not in auto_tools
+
+
+def test_auto_tools_block_restart_tools_after_decision():
+    tools = workflows.build_multi_project_workflow(SupportAgentConfig()).tools
+
+    decision = tools["decide_support_action"].callable(
+        case_type="general_question",
+        verdict="supported",
+        confidence=0.95,
+        risk_level="low",
+        applied_rule_ids=["delete_account_data_no_account"],
+        rule_action="draft_reply",
+        rule_human_review=False,
+    )
+    blocked = tools["read_email_thread"].callable(thread_id="19f222614b39d78b")
+
+    assert decision["action"] == "create_draft"
+    assert blocked["blocked"] is True
+    assert blocked["tool"] == "read_email_thread"
+    assert "decide_support_action already returned" in blocked["error"]
+    assert "save_case_state" in blocked["next_steps"]
+
+
+def test_cleanup_workflow_only_exposes_gmail_finish_tools():
+    workflow = workflows.build_multi_project_workflow(
+        SupportAgentConfig(),
+        surface="cleanup",
+    )
+
+    assert set(workflow.tools) == {
+        "get_existing_gmail_labels",
+        "apply_existing_gmail_labels",
+        "mark_gmail_messages_read",
+        "save_case_state",
+    }
+    assert workflow.required_steps == []
+    assert workflow.terminal_tool == "save_case_state"
+
+
+def test_auto_task_is_compact_and_keeps_required_case_data():
+    task = build_auto_task(
+        [
+            {
+                "message_id": "m1",
+                "thread_id": "t1",
+                "project_label": "BlackHole",
+                "matched_labels": ["BlackHole", "BlackHole/bug反馈"],
+            }
+        ],
+        live_run=False,
+    )
+
+    assert len(task) < 2500
+    assert "message_id=m1" in task
+    assert "thread_id=t1" in task
+    assert "project_label=BlackHole" in task
+    assert "save_case_state" in task
+    assert "Support workflow details live in the system prompt" in task
+    assert "BlackHole 关卡内目标物品找不到" not in task
+    assert "get_reply_template 每个 template_id 最多调用一次" not in task
+
+
+def test_auto_task_reprocess_cleanup_is_minimal_and_preserves_existing_draft():
+    task = build_auto_task(
+        [
+            {
+                "message_id": "m2",
+                "thread_id": "t2",
+                "project_label": "BusFever",
+                "matched_labels": ["BusFever"],
+                "reprocess_gmail_unread": True,
+                "existing_status": "draft_created",
+                "existing_draft_id": "draft-2",
+                "existing_issue_type": "save_transfer",
+                "existing_recommended_labels": ["BusFever", "BusFever/存档转移"],
+            }
+        ],
+        live_run=True,
+    )
+
+    assert len(task) < 2200
+    assert "existing_draft_id=draft-2" in task
+    assert "cleanup-only" in task
+    assert "do not call create_gmail_draft" in task
+    assert "do not call read_email_thread" in task
+
+
 def test_chat_server_readiness_buttons_have_chinese_tooltips():
     page = chat_server.PAGE
 
@@ -208,6 +317,30 @@ def test_parse_web_ui_local_config_reads_cloud_settings(tmp_path):
     assert parsed["CLOUD_BASE_URL"] == "https://api.deepseek.com"
 
 
+def test_parse_web_ui_local_config_reads_local_model_settings(tmp_path):
+    config_path = tmp_path / "web-ui.config.local.sh"
+    config_path.write_text(
+        '\n'.join(
+            [
+                'LLAMA_SERVER_BIN="/tmp/llama-server"',
+                'GGUF_PATH="/models/support.gguf"',
+                'LLAMA_HOST="127.0.0.1"',
+                'LLAMA_PORT="8088"',
+                'LLAMA_NGL="888"',
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    parsed = chat_server._parse_web_ui_local_config(config_path)
+
+    assert parsed["LLAMA_SERVER_BIN"] == "/tmp/llama-server"
+    assert parsed["GGUF_PATH"] == "/models/support.gguf"
+    assert parsed["LLAMA_HOST"] == "127.0.0.1"
+    assert parsed["LLAMA_PORT"] == "8088"
+    assert parsed["LLAMA_NGL"] == "888"
+
+
 def test_bootstrap_cloud_env_reads_startup_key_and_legacy_path(tmp_path, monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     legacy_dir = tmp_path / "cloud_model_keys"
@@ -270,6 +403,143 @@ def test_chat_server_can_switch_named_model_profiles(monkeypatch, tmp_path):
     assert "model-key" not in json.dumps(status, ensure_ascii=False)
     assert "api_key" not in json.dumps(status, ensure_ascii=False)
     assert control.runner.run_config.backend == "openai-compatible"
+
+
+def test_local_model_manager_starts_and_stops_owned_llama_server(tmp_path):
+    server_bin = tmp_path / "llama-server"
+    server_bin.write_text("#!/bin/sh\n", encoding="utf-8")
+    server_bin.chmod(0o755)
+    gguf = tmp_path / "support.gguf"
+    gguf.write_text("model", encoding="utf-8")
+    process_events: list[str] = []
+
+    class FakeProcess:
+        pid = 4242
+
+        def __init__(self) -> None:
+            self.stopped = False
+
+        def poll(self):
+            return 0 if self.stopped else None
+
+        def terminate(self):
+            process_events.append("terminate")
+            self.stopped = True
+
+        def wait(self, timeout=None):
+            process_events.append(f"wait:{timeout}")
+            return 0
+
+    popen_args: list[list[str]] = []
+
+    def fake_popen(args, **_kwargs):
+        popen_args.append(list(args))
+        return FakeProcess()
+
+    health_results = iter([False, True, False])
+    manager = chat_server.LocalModelServiceManager(
+        chat_server.LocalModelLaunchConfig(
+            server_bin=str(server_bin),
+            gguf_path=str(gguf),
+            host="127.0.0.1",
+            port=8088,
+            ngl="888",
+            log_path=tmp_path / "llama.log",
+        ),
+        popen_factory=fake_popen,
+        health_checker=lambda _base_url: next(health_results),
+        sleeper=lambda _seconds: None,
+    )
+
+    started = manager.start(timeout_seconds=1)
+
+    assert started["state"] == "running"
+    assert started["owned"] is True
+    assert started["pid"] == 4242
+    assert started["base_url"] == "http://127.0.0.1:8088/v1"
+    assert popen_args[0][:3] == [str(server_bin), "-m", str(gguf)]
+    assert "--jinja" in popen_args[0]
+    assert "-ngl" in popen_args[0]
+
+    stopped = manager.stop()
+
+    assert stopped["state"] == "stopped"
+    assert stopped["owned"] is False
+    assert process_events == ["terminate", "wait:5"]
+
+
+def test_local_model_manager_does_not_claim_or_stop_external_service(tmp_path):
+    server_bin = tmp_path / "llama-server"
+    server_bin.write_text("#!/bin/sh\n", encoding="utf-8")
+    server_bin.chmod(0o755)
+    gguf = tmp_path / "support.gguf"
+    gguf.write_text("model", encoding="utf-8")
+    popen_calls: list[list[str]] = []
+    manager = chat_server.LocalModelServiceManager(
+        chat_server.LocalModelLaunchConfig(
+            server_bin=str(server_bin),
+            gguf_path=str(gguf),
+            host="127.0.0.1",
+            port=8088,
+            log_path=tmp_path / "llama.log",
+        ),
+        popen_factory=lambda args, **_kwargs: popen_calls.append(list(args)),
+        health_checker=lambda _base_url: True,
+        sleeper=lambda _seconds: None,
+    )
+
+    started = manager.start(timeout_seconds=1)
+    stopped = manager.stop()
+
+    assert started["state"] == "external"
+    assert started["owned"] is False
+    assert stopped["state"] == "external"
+    assert stopped["owned"] is False
+    assert popen_calls == []
+
+
+def test_chat_server_select_local_profile_starts_local_model_service(tmp_path):
+    class FakeLocalModelManager:
+        def __init__(self) -> None:
+            self.started_with: AgentRunConfig | None = None
+
+        def status(self):
+            return {"state": "stopped", "owned": False}
+
+        def start(self, run_config, *, timeout_seconds=120):
+            self.started_with = run_config
+            return {
+                "state": "running",
+                "owned": True,
+                "base_url": run_config.base_url,
+                "pid": 123,
+            }
+
+        def stop(self):
+            return {"state": "stopped", "owned": False}
+
+    fake_local = FakeLocalModelManager()
+    control = chat_server.ControlState(
+        AgentRunConfig(config_path="config.toml"),
+        support_config=SupportAgentConfig(
+            model=ModelConfig(
+                backend="llamaserver",
+                gguf_path="/models/local.gguf",
+                base_url="http://127.0.0.1:8088/v1",
+            ),
+            state=StateConfig(processed_store_path=str(tmp_path / "processed.json")),
+        ),
+        local_model_manager=fake_local,
+    )
+
+    status = control.select_model_profile("local")
+
+    assert status["active_profile"] == "local"
+    assert status["model"]["backend"] == "llamaserver"
+    assert status["local_model"]["state"] == "running"
+    assert fake_local.started_with is not None
+    assert fake_local.started_with.gguf_path == "/models/local.gguf"
+    assert fake_local.started_with.base_url == "http://127.0.0.1:8088/v1"
 
 
 def test_chat_server_can_configure_missing_cloud_profile_from_ui(
@@ -521,6 +791,19 @@ def test_chat_server_page_has_automation_controls():
     assert 'self.path == "/api/manual-run/stream"' in source
     assert 'self.path == "/api/automation/stop"' in source
     assert 'parsed.path == "/api/automation/feed"' in source
+
+
+def test_chat_server_page_has_local_model_controls():
+    page = chat_server.PAGE
+    source = inspect.getsource(chat_server.ChatHandler)
+
+    assert 'id="local-model-stop"' in page
+    assert "renderLocalModelStatus" in page
+    assert "/api/local-model/start" in page
+    assert "/api/local-model/stop" in page
+    assert "关闭本地模型" in page
+    assert 'self.path == "/api/local-model/start"' in source
+    assert 'self.path == "/api/local-model/stop"' in source
 
 
 def test_automation_feed_tracks_session_cycles(tmp_path):
@@ -995,12 +1278,11 @@ def test_auto_task_builder_only_lists_new_message_targets():
 
     assert "message_id=m1 thread_id=t1" in task
     assert "message_id=m2 thread_id=t2" in task
-    assert "邮件类型" in task
-    assert "必须由你通过工具调用完成" in task
+    assert len(task) < 2500
+    assert "Support workflow details live in the system prompt" in task
     assert "save_case_state" in task
-    assert "detected_language" in task
-    assert "My question is:" in task
-    assert "status 只能是 draft_created、human_review、failed 或 skipped" in task
+    assert "Allowed final statuses: draft_created, human_review, failed, skipped" in task
+    assert "My question is:" not in task
 
 
 def test_auto_task_builder_places_labels_after_decision():
@@ -1009,26 +1291,29 @@ def test_auto_task_builder_places_labels_after_decision():
         live_run=False,
     )
 
-    assert task.index("decide_support_action") < task.index("apply_existing_gmail_labels")
-    assert task.index("review_reply_draft") < task.index("create_gmail_draft")
+    assert "When applying labels" in task
+    assert "exact recommended_labels" in task
+    assert "Support workflow details live in the system prompt" in task
+    assert "review_reply_draft" not in task
 
 
 def test_auto_task_builder_documents_ads_after_purchase_label_priority():
     task = build_auto_task([{"message_id": "m1", "thread_id": "t1"}], live_run=False)
 
-    assert "去广告后有广告" in task
-    assert "内购问题" in task
+    assert "去广告后有广告" in prompts.MULTI_PROJECT_SUPPORT_PROMPT
+    assert "内购问题" in prompts.MULTI_PROJECT_SUPPORT_PROMPT
     assert "recommended_labels" in task
+    assert "去广告后有广告" not in task
 
 
 def test_auto_task_builder_documents_ads_after_purchase_clickhouse_flow():
     task = build_auto_task([{"message_id": "m1", "thread_id": "t1"}], live_run=False)
 
-    assert "ads_after_purchase" in task
-    assert "get_remove_ads_investigation_playbook" in task
-    assert "assess_remove_ads_log_evidence" in task
-    assert "recommended_action" in task
-    assert "applied_rule_ids" in task
+    prompt = prompts.MULTI_PROJECT_SUPPORT_PROMPT
+    assert "ads_after_purchase" in prompt
+    assert "get_remove_ads_investigation_playbook" in prompt
+    assert "assess_remove_ads_log_evidence" in prompt
+    assert "ads_after_purchase" not in task
 
 
 def test_prompt_documents_ads_after_purchase_workflow():
@@ -1042,15 +1327,14 @@ def test_prompt_documents_ads_after_purchase_workflow():
 def test_auto_task_builder_skips_clickhouse_when_evidence_unavailable():
     task = build_auto_task([{"message_id": "m1", "thread_id": "t1"}], live_run=False)
 
-    assert "available=false" in task
-    assert "skip_clickhouse_fallback=true" in task
-    assert "ad_issue" in task
-    assert "ad_redirect_reset_ad_id" in task
-    assert "ad_loading_playback_troubleshooting" in task
-    assert "不要重复 read_email_thread" in task
-    assert "language_fallback=true" in task
-    assert "has_strong_match=false" in task
-    assert "禁止编造或替换其他工单内容" in task
+    prompt = prompts.MULTI_PROJECT_SUPPORT_PROMPT
+    assert "available=false" not in task
+    assert "skip_clickhouse_fallback=true" in prompt
+    assert "ad_issue" in prompt
+    assert "ad_redirect_reset_ad_id" in prompt
+    assert "ad_loading_playback_troubleshooting" in prompt
+    assert "language_fallback=true" in prompt
+    assert "has_strong_match=false" in prompt
 
 
 def test_prompt_skips_clickhouse_when_evidence_unavailable():
@@ -1080,13 +1364,10 @@ def test_create_draft_prompt_mentions_review_before_draft():
 def test_auto_task_builder_saves_case_state_before_labels():
     task = build_auto_task([{"message_id": "m1", "thread_id": "t1"}], live_run=False)
 
-    # After create: apply labels (with recommended) then save as final step
-    create_section = task.split("create_gmail_draft 成功后", 1)[-1].split("再根据结论", 1)[0]
-    assert "apply_existing_gmail_labels" in create_section
-    assert "save_case_state" in create_section
-    # The apply instruction for the create flow should appear before later general save mentions
-    assert "立即调用 apply_existing_gmail_labels" in task or "apply 之后调用 save" in task
-    assert "禁止自造 BlackHole/feature_request" in task
+    assert task.index("mark_gmail_messages_read") < task.index("save_case_state")
+    assert "exact recommended_labels" in task
+    assert "save_case_state" in task
+    assert "create_gmail_draft 成功后" not in task
 
 
 def test_prompt_and_auto_task_document_no_content_label_flow():
@@ -1095,13 +1376,10 @@ def test_prompt_and_auto_task_document_no_content_label_flow():
 
     assert "no_content" in prompt
     assert "无内容" in prompt
-    assert "case_type=no_content" in task
-    assert "无内容" in task
-    assert "save_case_state(status=skipped)" in task
     assert "mark_gmail_messages_read" in prompt
     assert "mark_gmail_messages_read" in task
-    assert "save_case_state(status=skipped)" in task
-    assert ("工具不会自动识别" in task or "务必让 Gmail UNREAD 被清除" in task or "no_content" in task and "decide_support_action" in task)
+    assert "case_type=no_content" not in task
+    assert "save_case_state(status=skipped)" not in task
     assert "Tools do not" in prompt or "mark_gmail_messages_read" in prompt or "no_content" in prompt
 
 
@@ -1111,10 +1389,6 @@ def test_prompt_and_auto_task_align_no_content_with_prerequisites():
 
     prompt_section = prompt.split("No-content emails (case_type=no_content):", 1)[1].split(
         "Player identity rules:",
-        1,
-    )[0]
-    task_section = task.split("由模型判断：若邮件没有实质玩家反馈", 1)[1].split(
-        "页面/区域空白",
         1,
     )[0]
 
@@ -1127,17 +1401,8 @@ def test_prompt_and_auto_task_align_no_content_with_prerequisites():
     assert prompt_section.index("assess_claim_credibility") < prompt_section.index(
         "decide_support_action"
     )
-
-    assert "resolve_player_identity" in task_section
-    assert "assess_claim_credibility" in task_section
-    assert "decide_support_action" in task_section
-    assert task_section.index("resolve_player_identity") < task_section.index(
-        "assess_claim_credibility"
-    )
-    assert task_section.index("assess_claim_credibility") < task_section.index(
-        "decide_support_action"
-    )
-    assert "不要再调用 assess_claim_credibility" not in task_section
+    assert "Support workflow details live in the system prompt" in task
+    assert "resolve_player_identity" not in task
 
 
 def test_prompt_and_auto_task_document_thread_latest_player_reply_policy():
@@ -1148,8 +1413,9 @@ def test_prompt_and_auto_task_document_thread_latest_player_reply_policy():
     assert "latest player-authored inbound message" in prompt
     assert prompts.THREAD_CONVERSATION_REMINDER in prompt
     assert prompts.THREAD_CONVERSATION_REMINDER in chat_prompt
-    assert "最新玩家邮件" in task
-    assert "通读整个 thread" in task
+    assert "最新玩家邮件" not in task
+    assert "通读整个 thread" not in task
+    assert "Support workflow details live in the system prompt" in task
 
 
 def test_auto_task_builder_includes_project_label_hints():
@@ -1167,7 +1433,7 @@ def test_auto_task_builder_includes_project_label_hints():
 
     assert "project_label=BlackHole" in task
     assert "BlackHole/bug反馈" in task
-    assert "根据邮件的 Gmail 父标签判断项目" in task
+    assert "project hint" in task or "project_label" in task
 
 
 def test_auto_task_builder_reprocesses_unread_existing_draft_without_new_draft():
@@ -1189,13 +1455,13 @@ def test_auto_task_builder_reprocesses_unread_existing_draft_without_new_draft()
         live_run=True,
     )
 
-    assert "Gmail 仍为 UNREAD" in task
+    assert "Gmail is still UNREAD" in task
     assert "existing_draft_id=draft-1" in task
-    assert "绝对不要再次调用 create_gmail_draft" in task
-    assert "沿用 existing_draft_id" in task
+    assert "do not call create_gmail_draft" in task
+    assert "preserve that draft_id" in task
     assert "apply_existing_gmail_labels" in task
     assert "mark_gmail_messages_read" in task
-    assert "save_case_state(status=draft_created" in task
+    assert "save_case_state" in task
 
 
 @pytest.mark.asyncio
@@ -2186,6 +2452,7 @@ async def test_auto_worker_calls_agent_with_natural_language_task(
 
         async def run(self, task, status_sink=None, **kwargs):
             captured["task"] = task
+            captured["auto_surface"] = kwargs.get("auto_surface")
             return AgentRunResult(
                 answer="本轮已完成。",
                 live_run=False,
@@ -2223,7 +2490,8 @@ async def test_auto_worker_calls_agent_with_natural_language_task(
     assert result["outcomes"][0]["status"] == "draft_created"
     assert result["outcomes"][0]["draft_id"] == "d1"
     assert "message_id=m1 thread_id=t1" in captured["task"]
-    assert "必须由你通过工具调用完成" in captured["task"]
+    assert "Support workflow details live in the system prompt" in captured["task"]
+    assert captured["auto_surface"] == "auto"
     assert statuses[-1] == "[完成] 自动处理结果：已创建草稿"
 
 
@@ -2266,11 +2534,19 @@ async def test_auto_worker_runs_selected_messages_one_at_a_time(
         def __init__(self, *args, **kwargs):
             pass
 
-        async def run(self, task, status_sink=None, stop_after_case_ids=None, run_trace=None):
+        async def run(
+            self,
+            task,
+            status_sink=None,
+            stop_after_case_ids=None,
+            run_trace=None,
+            **kwargs,
+        ):
             call = {
                 "task": task,
                 "stop_after_case_ids": set(stop_after_case_ids or set()),
                 "trace_path": str(run_trace.log_path),
+                "auto_surface": kwargs.get("auto_surface"),
             }
             calls.append(call)
             message_id = next(iter(call["stop_after_case_ids"]))
@@ -2320,6 +2596,7 @@ async def test_auto_worker_runs_selected_messages_one_at_a_time(
     assert result["selected_count"] == 3
     assert [outcome["draft_id"] for outcome in result["outcomes"]] == ["d-m1", "d-m2", "d-m3"]
     assert all(outcome["trace_path"].endswith(f"{outcome['message_id']}.jsonl") for outcome in result["outcomes"])
+    assert {call["auto_surface"] for call in calls} == {"auto"}
 
 
 @pytest.mark.asyncio
@@ -2347,7 +2624,14 @@ async def test_auto_worker_continues_after_single_message_failure(
         def __init__(self, *args, **kwargs):
             pass
 
-        async def run(self, task, status_sink=None, stop_after_case_ids=None, run_trace=None):
+        async def run(
+            self,
+            task,
+            status_sink=None,
+            stop_after_case_ids=None,
+            run_trace=None,
+            **kwargs,
+        ):
             message_id = next(iter(stop_after_case_ids))
             if message_id == "m1":
                 raise RuntimeError("model loop exhausted")

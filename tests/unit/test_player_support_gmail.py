@@ -390,6 +390,48 @@ async def test_list_unread_project_emails_scans_existing_project_labels():
     ]
 
 
+@pytest.mark.asyncio
+async def test_compact_existing_labels_omits_raw_gmail_label_objects(monkeypatch):
+    gmail = GmailTools(
+        GmailConfig(
+            access_token="test-token",
+            project_label_names=["BlackHole"],
+            allowed_label_names=["无内容"],
+        ),
+        compact_results=True,
+    )
+
+    async def fake_request(method, url, *, action, headers=None, params=None, json=None, data=None):
+        request = httpx.Request(method, url)
+        return httpx.Response(
+            200,
+            json={
+                "labels": [
+                    {"id": "Label_Project", "name": "BlackHole", "type": "user"},
+                    {"id": "Label_Bug", "name": "BlackHole/bug反馈", "type": "user"},
+                    {"id": "UNREAD", "name": "UNREAD", "type": "system"},
+                ]
+            },
+            request=request,
+        )
+
+    async def fake_headers():
+        return {"Authorization": "Bearer test-token"}
+
+    monkeypatch.setattr(gmail, "_request", fake_request)
+    monkeypatch.setattr(gmail, "_headers", fake_headers)
+
+    result = await gmail.get_existing_gmail_labels()
+
+    assert "labels" not in result
+    assert result["label_names"] == ["BlackHole", "BlackHole/bug反馈", "UNREAD"]
+    assert result["allowed_label_names"] == ["无内容"]
+    assert result["project_parent_labels"] == ["BlackHole"]
+    assert result["project_labels_by_parent"] == {
+        "BlackHole": ["BlackHole", "BlackHole/bug反馈"]
+    }
+
+
 def test_normalize_sender_email_accepts_simple_address():
     assert normalize_sender_email(" Player@Example.COM ") == "player@example.com"
 

@@ -22,6 +22,7 @@ class ToolSharedState:
 
     def __init__(self) -> None:
         self._last_extract_claim: dict[str, Any] = {}
+        self._last_support_decision: dict[str, Any] = {}
         self._last_thread_id: str | None = None
         self._last_sender_email: str | None = None
 
@@ -33,6 +34,15 @@ class ToolSharedState:
 
     def get_recommended_labels(self) -> list[str]:
         return list(self._last_extract_claim.get("recommended_labels") or [])
+
+    def set_last_support_decision(self, payload: dict[str, Any]) -> None:
+        self._last_support_decision = dict(payload)
+
+    def get_last_support_decision(self) -> dict[str, Any]:
+        return dict(self._last_support_decision)
+
+    def has_support_decision(self) -> bool:
+        return bool(self._last_support_decision)
 
     def set_last_thread_context(self, thread_id: str, sender_email: str | None) -> None:
         self._last_thread_id = thread_id

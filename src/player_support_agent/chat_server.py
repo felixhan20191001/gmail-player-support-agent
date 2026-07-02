@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import atexit
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import html
@@ -31,6 +32,7 @@ from .agent_runner import (
 )
 from .automation_session_summary import CycleSnapshot, build_automation_feed
 from .auto_worker import run_once
+from .local_model_service import LocalModelLaunchConfig, LocalModelServiceManager
 from .main import build_preflight_summary
 from .manual_trigger import DEFAULT_MANUAL_STORE
 from .paths import default_var_dir, project_root
@@ -67,9 +69,17 @@ DEFAULT_CLOUD_KEY_DIR = str(
 _LEGACY_CLOUD_KEY_DIR = str(default_var_dir() / "cloud_model_keys")
 STARTUP_CLOUD_KEY_NAME = "startup"
 _WEB_UI_LOCAL_CONFIG = project_root() / "scripts" / "web-ui.config.local.sh"
-_LOCAL_CONFIG_RE = re.compile(
-    r'^\s*(CLOUD_API_KEY|CLOUD_MODEL|CLOUD_BASE_URL)\s*=\s*"(.*)"\s*$'
-)
+_LOCAL_CONFIG_KEYS = {
+    "CLOUD_API_KEY",
+    "CLOUD_MODEL",
+    "CLOUD_BASE_URL",
+    "LLAMA_SERVER_BIN",
+    "GGUF_PATH",
+    "LLAMA_HOST",
+    "LLAMA_PORT",
+    "LLAMA_NGL",
+}
+_LOCAL_CONFIG_RE = re.compile(r'^\s*([A-Z0-9_]+)\s*=\s*"(.*)"\s*$')
 _CLOUD_KEY_NAME_RE = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
 
 
@@ -139,7 +149,7 @@ def _parse_web_ui_local_config(path: Path | None = None) -> dict[str, str]:
     values: dict[str, str] = {}
     for line in resolved.read_text(encoding="utf-8").splitlines():
         match = _LOCAL_CONFIG_RE.match(line)
-        if match:
+        if match and match.group(1) in _LOCAL_CONFIG_KEYS:
             values[match.group(1)] = match.group(2)
     return values
 
@@ -564,12 +574,25 @@ class ControlState:
         support_config: SupportAgentConfig | None = None,
         manual_store_path: str = DEFAULT_MANUAL_STORE,
         cloud_key_dir: str = DEFAULT_CLOUD_KEY_DIR,
+        local_model_manager: LocalModelServiceManager | None = None,
     ) -> None:
         _bootstrap_cloud_env_from_local_files()
         self.base_run_config = run_config
         self.support_config = support_config or load_config(run_config.config_path)
         self.manual_store_path = manual_store_path
         self.cloud_key_store = CloudKeyStore(cloud_key_dir)
+        local_values = _parse_web_ui_local_config()
+        fallback_gguf = (
+            run_config.gguf_path
+            or self.support_config.model.gguf_path
+            or None
+        )
+        self.local_model_manager = local_model_manager or LocalModelServiceManager(
+            LocalModelLaunchConfig.from_web_ui_values(
+                local_values,
+                fallback_gguf_path=fallback_gguf,
+            )
+        )
         self.active_cloud_key: str | None = None
         self.lock = Lock()
         self.execution_lock = Lock()
@@ -618,7 +641,11 @@ class ControlState:
             )
         return profiles
 
-    def _status_unlocked(self) -> dict[str, Any]:
+    def _status_unlocked(
+        self,
+        *,
+        local_model_status: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         return {
             "active_profile": self.active_profile,
             "model": _safe_model_summary(self.runner.run_config),
@@ -633,6 +660,7 @@ class ControlState:
             "processed_store_path": str(self.store.path),
             "automation": self.automation.status(),
             "execution_busy": self.execution_lock.locked(),
+            "local_model": local_model_status or self.local_model_manager.status(),
         }
 
     def status(self) -> dict[str, Any]:
@@ -687,6 +715,15 @@ class ControlState:
                     self.base_run_config,
                     profiles[profile_name],
                 )
+                resolved_run_config = resolve_run_config(
+                    run_config,
+                    self.support_config.model,
+                )
+                local_model_status = None
+                if resolved_run_config.backend == "llamaserver":
+                    local_model_status = self.local_model_manager.start(
+                        resolved_run_config
+                    )
                 self.runner = SupportAgentRunner(
                     run_config,
                     support_config=self.support_config,
@@ -696,7 +733,29 @@ class ControlState:
                 self.active_profile = profile_name
                 if profile_name != "cloud":
                     self.active_cloud_key = None
-                return self._status_unlocked()
+                return self._status_unlocked(local_model_status=local_model_status)
+
+    def _local_profile_run_config_unlocked(self) -> AgentRunConfig:
+        profiles = self._configured_profiles_unlocked()
+        model = profiles.get("local") or _profile_slot_model("local")
+        return resolve_run_config(
+            _model_profile_run_config(self.base_run_config, model),
+            self.support_config.model,
+        )
+
+    def start_local_model(self) -> dict[str, Any]:
+        with self.execution_lock:
+            with self.lock:
+                run_config = self._local_profile_run_config_unlocked()
+            local_model_status = self.local_model_manager.start(run_config)
+            with self.lock:
+                return self._status_unlocked(local_model_status=local_model_status)
+
+    def stop_local_model(self) -> dict[str, Any]:
+        with self.execution_lock:
+            local_model_status = self.local_model_manager.stop()
+            with self.lock:
+                return self._status_unlocked(local_model_status=local_model_status)
 
     def recent_runs(self, *, limit: int = 20) -> list[dict[str, Any]]:
         with self.lock:
@@ -924,6 +983,14 @@ def start_automation(control: ControlState, payload: dict[str, Any]) -> dict[str
 
 def stop_automation(control: ControlState) -> dict[str, Any]:
     return control.automation.stop()
+
+
+def start_local_model(control: ControlState) -> dict[str, Any]:
+    return control.start_local_model()
+
+
+def stop_local_model(control: ControlState) -> dict[str, Any]:
+    return control.stop_local_model()
 
 
 def automation_feed(
@@ -1299,10 +1366,13 @@ PAGE = """\
         <section>
           <h2>模型</h2>
           <div id="model-detail" class="subtle">加载中...</div>
+          <div id="local-model-detail" class="subtle">本地模型服务：加载中...</div>
           <div class="button-row">
             <button class="secondary" data-profile="local">本地模型</button>
             <button class="secondary" data-profile="cloud">云模型</button>
             <button class="secondary" id="cloud-key" type="button" data-tooltip="保存或切换云模型 API key。密钥只写入本机 var 目录，页面不会回显。">云 Key</button>
+            <button class="secondary" id="local-model-start" type="button" data-tooltip="按本机配置启动 llama-server，但不自动处理邮件。">启动本地服务</button>
+            <button class="secondary" id="local-model-stop" type="button" data-tooltip="只关闭这个 WebUI 会话启动的 llama-server，不会强杀外部进程。">关闭本地模型</button>
             <button class="secondary" id="refresh-status" type="button">刷新</button>
           </div>
         </section>
@@ -1431,6 +1501,7 @@ PAGE = """\
     const send = document.getElementById('send');
     const modelChip = document.getElementById('model-chip');
     const modelDetail = document.getElementById('model-detail');
+    const localModelDetail = document.getElementById('local-model-detail');
     const runs = document.getElementById('runs');
     const cloudKeyModal = document.getElementById('cloud-key-modal');
     let statusCache = null;
@@ -1518,6 +1589,31 @@ PAGE = """\
 
     function modelName(model) {
       return model.model || model.gguf_path || model.base_url || model.backend;
+    }
+
+    function renderLocalModelStatus(localModel) {
+      const info = localModel || {};
+      const stateText = {
+        running: '运行中',
+        external: '外部运行中',
+        starting: '启动中',
+        stopped: '已停止',
+        failed: '启动失败'
+      }[info.state] || (info.state || '未知');
+      const ownedText = info.owned ? 'WebUI 管理' : info.state === 'external' ? '外部服务' : '未托管';
+      const pidText = info.pid ? ` | pid:${info.pid}` : '';
+      const logText = info.log_path ? ` | log:${info.log_path}` : '';
+      const errorText = info.last_error ? ` | 错误:${shortText(info.last_error, 96)}` : '';
+      localModelDetail.textContent = `本地模型服务：${stateText} | ${ownedText} | ${info.base_url || ''}${pidText}${logText}${errorText}`;
+      const startBtn = document.getElementById('local-model-start');
+      const stopBtn = document.getElementById('local-model-stop');
+      const busy = chatRunning || manualRunning;
+      if (startBtn) {
+        startBtn.disabled = busy || Boolean(info.owned && ['running', 'starting'].includes(info.state));
+      }
+      if (stopBtn) {
+        stopBtn.disabled = busy || !Boolean(info.owned);
+      }
     }
 
     function ensureAutomationBanner() {
@@ -1630,6 +1726,7 @@ PAGE = """\
       modelChip.innerHTML = `<strong>${data.active_profile}</strong>${data.model.backend}`;
       const keyText = data.active_cloud_key ? ` | key:${data.active_cloud_key}` : '';
       modelDetail.textContent = `${data.model.backend} | ${modelName(data.model)} | ${data.model.base_url || ''}${keyText}`;
+      renderLocalModelStatus(data.local_model);
       renderAutomationStatus(data.automation);
       document.querySelectorAll('[data-profile]').forEach((button) => {
         const name = button.dataset.profile;
@@ -1764,6 +1861,22 @@ PAGE = """\
       renderAutomationStatus(data);
       await pollAutomationFeed();
       add('assistant', '自动处理已停止。');
+    }
+
+    async function startLocalModelService() {
+      add('user', '启动本地模型服务');
+      const data = await requestJson('/api/local-model/start', {});
+      renderStatus(data);
+      const local = data.local_model || {};
+      add('assistant', `本地模型服务：${local.state || 'unknown'} / ${local.base_url || ''}`);
+    }
+
+    async function stopLocalModelService() {
+      add('user', '关闭本地模型服务');
+      const data = await requestJson('/api/local-model/stop', {});
+      renderStatus(data);
+      const local = data.local_model || {};
+      add('assistant', `本地模型服务：${local.state || 'unknown'}`);
     }
 
     async function requestManualStream(payload, onEvent) {
@@ -1934,6 +2047,13 @@ PAGE = """\
         const button = document.getElementById(id);
         if (button) button.disabled = busy;
       }
+      for (const id of ['local-model-start', 'local-model-stop']) {
+        const button = document.getElementById(id);
+        if (button && busy) button.disabled = true;
+      }
+      if (!busy && statusCache?.local_model) {
+        renderLocalModelStatus(statusCache.local_model);
+      }
     }
 
     function setChatRunning(active) {
@@ -2024,6 +2144,12 @@ PAGE = """\
 
     document.getElementById('refresh-status').addEventListener('click', () => refreshStatus().catch((error) => add('error', error.message)));
     document.getElementById('refresh-runs').addEventListener('click', () => refreshRuns().catch((error) => add('error', error.message)));
+    document.getElementById('local-model-start').addEventListener('click', () => {
+      startLocalModelService().catch((error) => add('error', error.message));
+    });
+    document.getElementById('local-model-stop').addEventListener('click', () => {
+      stopLocalModelService().catch((error) => add('error', error.message));
+    });
     document.getElementById('cloud-key').addEventListener('click', openCloudKeyModal);
     document.getElementById('cloud-key-cancel').addEventListener('click', closeCloudKeyModal);
     document.getElementById('cloud-key-save').addEventListener('click', () => {
@@ -2197,6 +2323,12 @@ class ChatHandler(BaseHTTPRequestHandler):
                 return
             if self.path == "/api/cloud-key":
                 self._send_json(self.control.save_cloud_api_key(payload))
+                return
+            if self.path == "/api/local-model/start":
+                self._send_json(start_local_model(self.control))
+                return
+            if self.path == "/api/local-model/stop":
+                self._send_json(stop_local_model(self.control))
                 return
             if self.path == "/api/readiness":
                 self._send_json(asyncio.run(run_readiness(self.control, payload)))
@@ -2405,16 +2537,31 @@ def build_run_config(args: argparse.Namespace) -> AgentRunConfig:
     )
 
 
+def _stop_local_model_quietly(control: ControlState) -> None:
+    try:
+        control.local_model_manager.stop()
+    except Exception:
+        return
+
+
 def main() -> None:
     args = parse_args()
     run_config = build_run_config(args)
     control = ControlState(run_config)
+    atexit.register(_stop_local_model_quietly, control)
     server = ThreadingHTTPServer((args.host, args.port), ChatHandler)
     server.config = ServerConfig(run_config=run_config)  # type: ignore[attr-defined]
     server.control = control  # type: ignore[attr-defined]
     print(f"Forge control UI listening on http://{args.host}:{args.port}")
     print("Model backend:", control.runner.run_config.backend)
-    server.serve_forever()
+    if control.runner.run_config.backend == "llamaserver":
+        local_status = control.local_model_manager.start(control.runner.run_config)
+        print("Local model service:", local_status.get("state"), local_status.get("base_url"))
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()
+        _stop_local_model_quietly(control)
 
 
 if __name__ == "__main__":
